@@ -1,0 +1,68 @@
+# compile
+*.class
+*.jar
+
+*.o
+*.a
+*.exe
+
+*.html
+
+# Project
+	## IntelliJ IDEA Project files
+.idea/
+# **/.idea/
+*.iml
+*.ipr
+*.iws
+	## mvn
+.mvn
+	## Eclipse Project files
+.classpath
+.project
+.settings/
+proguard/
+	# Local configuration file (sdk path, etc)
+local.properties
+	## Gradle files
+.gradle/
+gradlew
+gradlew.bat
+
+# tool
+.vscode
+.vagrant
+
+# some local files
+*/.DS_Store
+.DS_Store
+unused.txt
+
+*.log
+*_tmp
+*.dump
+
+# language
+	## go
+vendor/
+	## python
+*__pycache__/
+*.pyc
+
+# Generated files
+build/
+*/build/
+
+bin/
+target/
+
+.libs/
+.lib/
+libs/
+lib/
+
+gen/
+out/
+log/
+output/
+download/

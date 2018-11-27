@@ -1,0 +1,4 @@
+#!/bin/sh
+git add -A .
+git ci -m "fix"
+git push origin master

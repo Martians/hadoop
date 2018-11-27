@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Configuration status="INFO">
+
+	<properties>
+        <property name="LOGS_PATH">.</property>
+    </properties>
+
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%6t] %-5level - %msg%n" />
+        </Console>
+
+        <File name="server_log" fileName="${LOGS_PATH}/output.log">
+            <PatternLayout pattern="%d{yyyy HH:mm:ss.SSS} [%6t] %-5level- %msg%n" />
+        </File>
+
+        <!--<File name="warning_log" fileName="${LOGS_PATH}/extra/warning.log">-->
+            <!--<PatternLayout pattern="%d{yyyy HH:mm:ss.SSS} [%6t] %-5level- %msg%n" />-->
+        <!--</File>-->
+
+        <!--<File name="data_log" fileName="${LOGS_PATH}/extra/data.log">-->
+            <!--<PatternLayout pattern="%msg%n" />-->
+        <!--</File>-->
+    </Appenders>
+
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Console" />
+            <AppenderRef ref="server_log" />
+        </Root>
+
+        <!--<Logger name="warning" level="info" additivity="false">-->
+            <!--<AppenderRef ref="warning_log" />-->
+        <!--</Logger>-->
+
+        <!--<Logger name="data" level="info" additivity="false">-->
+            <!--<AppenderRef ref="data_log" />-->
+        <!--</Logger>-->
+    </Loggers>
+
+</Configuration>  
