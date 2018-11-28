@@ -52,7 +52,7 @@ public class AppHandler {
 
     public void performWrite(int[] success) {
         int count = success[2];
-        int loops = (count + command.param.batch - 1) / command.param.batch;
+        int loops = (count + command.workp.batch - 1) / command.workp.batch;
         boolean exit = false;
 
         int result[] = new int[2];
@@ -61,7 +61,7 @@ public class AppHandler {
             result[0] = 0;
             result[1] = 0;
 
-            int curr = Integer.min(command.param.batch, count);
+            int curr = Integer.min(command.workp.batch, count);
             count -= curr;
 
             if ((write(result, curr)) < 0) {
@@ -79,7 +79,7 @@ public class AppHandler {
 
     public void performRead(int[] success) {
         int count = success[2];
-        int loops = (count + command.param.batch - 1) / command.param.batch;
+        int loops = (count + command.workp.batch - 1) / command.workp.batch;
         boolean exit = false;
 
         int result[] = new int[2];
@@ -88,7 +88,7 @@ public class AppHandler {
             result[0] = 0;
             result[1] = 0;
 
-            int curr = Integer.min(command.param.batch, count);
+            int curr = Integer.min(command.workp.batch, count);
             count -= curr;
 
             if ((read(result, curr)) < 0) {
@@ -143,7 +143,7 @@ public class AppHandler {
 
     public void performGen(int[] success) {
         int count = success[2];
-        int loops = (count + command.param.batch - 1) / command.param.batch;
+        int loops = (count + command.workp.batch - 1) / command.workp.batch;
         boolean exit = false;
 
         if (count == 0) {
@@ -157,7 +157,7 @@ public class AppHandler {
             result[0] = 0;
             result[1] = 0;
 
-            int curr = Integer.min(command.param.batch, count);
+            int curr = Integer.min(command.workp.batch, count);
             count -= curr;
 
             for (int b = 0; b < curr; b++) {

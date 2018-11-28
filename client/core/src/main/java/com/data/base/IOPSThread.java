@@ -59,9 +59,9 @@ public class IOPSThread extends Thread {
                  *      不再从source中后去任务数，source的总个数是一定的，取走了就没有了
                  */
                 if (success[0] < success[2]) {
-                    success[2] = source.nextWork(command.param.fetch - success[0]) + success[0];
+                    success[2] = source.nextWork(command.workp.fetch - success[0]) + success[0];
                 } else {
-                    success[2] = source.nextWork(command.param.fetch);
+                    success[2] = source.nextWork(command.workp.fetch);
                 }
 
                 /**

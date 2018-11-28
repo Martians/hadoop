@@ -1,6 +1,6 @@
 package com.data.util.command;
 
-import com.data.base.Command;
+import com.data.util.generator.Random;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,13 +59,8 @@ public class BaseCommand {
     protected String validBind = "";
 
     public class ClientParam {
-
         public Long  total = getLong("work.total");
-        public int   batch = Integer.max(getInt("work.batch"), 1);
         public int   thread = getInt("work.thread");
-
-        public int   fetch = getInt("work.fetch");
-        public long  seed  = getLong("gen.seed");
     }
     public ClientParam param;
 
@@ -80,8 +75,15 @@ public class BaseCommand {
 
             addOption("host", "server host", "192.168.10.7");
             addOption("clear", "clear data", false);
+
+            /**
+             * belong to workload, but used always, so put to base command
+             */
+            addOption("work.total", "request count", 100000);
+            addOption("work.thread",  "thread count", 10);
         }
     }
+
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////
     public BaseCommand() {}
@@ -308,6 +310,7 @@ public class BaseCommand {
      */
     protected void construct() {
         addParser("", new Common());
+        addParser("gen", new Random.Option());
 
         registParser();
     }

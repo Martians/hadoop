@@ -25,8 +25,6 @@ public class ClientOption {
              */
             addOption("type",  "write、read、scan; load、generate", "write");
 
-            addOption("total", "request count", 100000);
-            addOption("thread",  "thread count", 10);
             addOption("batch",  "batch request", 100);
             addOption("read_thread",  "specific read thread", 0);
 
@@ -34,19 +32,6 @@ public class ClientOption {
              * inner work
              */
             addOption("fetch",  "thread loop task count", 1000);
-        }
-    }
-
-    public static class Generator extends BaseOption {
-        protected void initialize() {
-
-            addOption("seed",  "random seed",0);
-            //addOption("key_type",  "key type：rand、uuid、seq、table、fix", "rand");
-            //addOption("data_type",  "key type：rand、uuid、seq、table、fix", "rand");
-
-            addOption("data_path", "data file path; if setted, output[generate、scan], input[load、read]", "");
-            addOption("output.file_count", "min output file count", 1);
-            addOption("output.file_size", "output file size (M)", "-1");
         }
     }
 

@@ -43,6 +43,13 @@ public class Command extends BaseCommand {
     }
     public TableParam table;
 
+    public class WorkParam {
+        public int   batch = Integer.max(getInt("work.batch"), 1);
+        public int   fetch = getInt("work.fetch");
+        public long  seed  = getLong("gen.seed");
+    }
+    public WorkParam workp;
+
     /**
      * 内部状态
      */
@@ -67,7 +74,6 @@ public class Command extends BaseCommand {
     protected void registParser() {
         addParser("",       new ClientOption.Global());
         addParser("work",   new ClientOption.Workload());
-        addParser("gen",    new ClientOption.Generator());
         addParser("table",  new ClientOption.Table());
         addParser("cache",  new MemCache.BaseOption());
 
@@ -120,6 +126,7 @@ public class Command extends BaseCommand {
         super.validate();
 
         table = new TableParam();
+        workp = new WorkParam();
 
         resolveParam();
 
@@ -209,8 +216,8 @@ public class Command extends BaseCommand {
 
     void fixingParam() {
 
-        if (param.batch > 0) {
-            param.fetch = Math.max(param.fetch, param.batch);
+        if (workp.batch > 0) {
+            workp.fetch = Math.max(workp.fetch, workp.batch);
         }
 
         if (param.thread > 1000) {

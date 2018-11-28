@@ -1,6 +1,7 @@
 package com.data.util.generator;
 
 import com.data.util.command.BaseCommand;
+import com.data.util.command.BaseOption;
 import com.data.util.schema.DataSchema;
 import com.data.util.test.ThreadTest;
 import org.slf4j.Logger;
@@ -28,6 +29,19 @@ public class Random {
     protected BaseCommand command;
     public void set(BaseCommand command) {
         this.command = command;
+    }
+
+    public static class Option extends BaseOption {
+        protected void initialize() {
+
+            addOption("seed",  "random seed",0);
+            //addOption("key_type",  "key type：rand、uuid、seq、table、fix", "rand");
+            //addOption("data_type",  "key type：rand、uuid、seq、table、fix", "rand");
+
+            addOption("data_path", "data file path; if setted, output[generate、scan], input[load、read]", "");
+            addOption("output.file_count", "min output file count", 1);
+            addOption("output.file_size", "output file size (M)", "-1");
+        }
     }
 
     public static Random newRandom(String name) {

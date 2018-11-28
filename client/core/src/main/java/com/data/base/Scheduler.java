@@ -68,7 +68,7 @@ public class Scheduler {
         log.info("========================================================================");
         log.info("{}, {}", command.dumpLoad(), handler.dumpLoad());
         log.info("  \t{}, thread {}, batch {}",
-                source.dumpLoad(), command.param.thread, command.param.batch);
+                source.dumpLoad(), command.param.thread, command.workp.batch);
         log.info("========================================================================");
 
         try {
