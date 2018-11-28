@@ -18,7 +18,7 @@ import static com.data.util.Define.CSV_SEP;
 import static com.data.util.test.ThreadTest.debugThread;
 
 public class InputSource extends DataSource implements Runnable {
-    final static Logger log = LoggerFactory.getLogger(InputSource.class);
+    static final Logger log = LoggerFactory.getLogger(InputSource.class);
 
     Thread  thread;
     MemCache cache;
@@ -27,6 +27,8 @@ public class InputSource extends DataSource implements Runnable {
 
     @Override
     public void initialize() {
+        super.initialize();
+
         cache.command = command;
 
         cache = new MemCache();
@@ -61,7 +63,7 @@ public class InputSource extends DataSource implements Runnable {
         int nums = 0;
         int index = 0;
 
-        String[] split = line.split(CSV_SEP);
+        String[] split = line.split(", ");
         Object[] array = null;
 
         if (command.schema.list.size() != split.length) {

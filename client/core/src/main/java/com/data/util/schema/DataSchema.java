@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -14,24 +13,24 @@ import java.util.regex.Pattern;
  * 含义：
  *      () 长度
  *      [] 内容范围
- *      {} 重复
  *      @  生成器
- *      $  索引
+ *      {} 重复：使用相同的配置，共用generator
+ *
+ *      取消：$索引：使用相同配置，但不共用generator
+ *                  设置index，表明从之前的source中选取，这样就不需要后续的
  *
  * integer
- *      ([min,] max [, count]), 如果选择了count，会预先生成信息并记录在内存中
+ *      ([min,] max / count]), 取值范围：如果选择了count，会预先生成信息并记录在内存中
  *      @ gen ：
  *      {repeat field}
- *      $index：设置index，表明从之前的source中选取，这样就不需要后续的
  *
  *      integer[100, 2000, 500] @rand {10}
  *      integer@4
  *
  * string
- *      ([min,] max [,std])
+ *      ([min,] max / count])，长度范围：
  *      [char range]：尚未实现
  *      {repeat field}
- *      $index
  *
  *      string(100)[a-z, 100-200]
  *      string(100) @table {5}
@@ -56,16 +55,22 @@ public class DataSchema {
          * integer
          */
         public long min;
+
+        /**
+         * integer: max data
+         */
         public long max;
         public long count;
 
         /**
          * string
          */
-        public int size;
+        public int len;
 
-        public Random generator;
+        public Random gen;
+
         boolean key;
+        public int curr;
 
         public Item newItem(int index) {
             Item one = new Item();
@@ -74,9 +79,11 @@ public class DataSchema {
 
             one.min =  min;
             one.max = max;
-            one.generator = generator;
 
-            one.size = size;
+            one.len = len;
+            one.gen = gen;
+
+            //one.size = size;
             return one;
         }
 
@@ -84,7 +91,10 @@ public class DataSchema {
             StringBuilder sb = new StringBuilder();
             sb.append(type);
 
-            if (max != 0) {
+            if (len != 0) {
+                sb.append("(" + len + ")");
+
+            } else if (max != 0) {
                 sb.append("(");
                 if (min != 0) {
                     sb.append(min + ", ");
@@ -96,12 +106,8 @@ public class DataSchema {
                 sb.append(")");
             }
 
-            if (size != 0) {
-                sb.append("(" + size + ")");
-            }
-
-            if (generator != null) {
-                sb.append(" @" + generator);
+            if (gen != null) {
+                sb.append(" @" + gen);
             }
             return sb.toString();
         }
@@ -144,7 +150,7 @@ public class DataSchema {
                 parse(value.toLowerCase());
             }
         }
-        log.debug("{}", this);
+        log.info("{}", this);
     }
 
     public String toString() {
@@ -152,23 +158,21 @@ public class DataSchema {
         sb.append("schema:\n");
 
         for (Item item : list) {
-            sb.append(String.format("<%d \t%s\n", item.index, item));
+            sb.append(String.format("<%-2d  %s\n", item.index, item));
         }
         return sb.toString();
     }
 
     protected void dump(Matcher match) {
-        if (match.find()) {
-            log.info("group: {}", match.group());
+        log.info("group: {}", match.group());
 
-            for (int i = 1; i <= match.groupCount(); i++) {
-                log.info("\t\t {} - {}", i, match.group(i));
-            }
+        for (int i = 1; i <= match.groupCount(); i++) {
+            log.info("\t\t {} - {}", i, match.group(i));
         }
     }
 
     public void parse(String line) {
-        log.debug("parse: {}", line);
+        log.info("parse: {}", line);
         Item item = new Item();
 
         String typePartten = "^\\w+";
@@ -181,28 +185,25 @@ public class DataSchema {
         }
 
         /**
-         * 解析range ()
-         *  integer: (min, max, count)
-         *  string:  (max)
-         *
+         * 解析range (min, max, count)
          *      integer(56)
          *      String(11, 56)
-         *      integer(11, 56, 29)
-         *      integer( 11 ,56 , 29 )
+         *      integer(11, 56 / 29)
+         *      integer( 11 , 56 / 29 )
          */
-        String rangePartten = "\\((\\W*(\\d+)\\W*,\\W*)?(\\d+)(\\W*,\\W*(\\d+)\\W*)?\\)";
+        String rangePartten = "\\((\\W*(\\d+)\\W*,\\W*)?(\\d+)(\\W*/\\W*(\\d+))?\\W*\\)";
         pattern = Pattern.compile(rangePartten);
         match = pattern.matcher(line);
         if (match.find()) {
             if (match.group(2) != null) {
-                item.min = Integer.valueOf(match.group(2));
+                item.min = Long.valueOf(match.group(2));
             }
             if (match.group(3) != null) {
-                item.max = Integer.valueOf(match.group(3));
+                item.max = Long.valueOf(match.group(3));
             }
 
             if (match.group(5) != null) {
-                item.count = Integer.valueOf(match.group(5));
+                item.count = Long.valueOf(match.group(5));
             }
         }
 
@@ -217,16 +218,15 @@ public class DataSchema {
         match = pattern.matcher(line);
         if (match.find()) {
             if (match.group(1) != null) {
-                item.generator = Random.newRandom(match.group(1));
+                item.gen = Random.newRandom(match.group(1));
             }
         }
-        if (item.generator == null) {
-            item.generator = Random.newRandom(item.type == Type.integer ? "numeric" : "random");
+        if (item.gen == null) {
+            Random.defaultRandom(item);
         }
 
         /**
-         * 解析repeat #
-         *
+         * 解析{repeat}
          */
         int repeat = 1;
         String repeatPartten = "\\{\\W*(\\d+)\\W*\\}";
@@ -238,6 +238,9 @@ public class DataSchema {
             }
         }
 
+        /**
+         * $index, not use now
+         */
         int indexPointer = -1;
         String indexPartten = "\\$\\W*(\\w+)\\W*";
         pattern = Pattern.compile(indexPartten);
@@ -245,13 +248,16 @@ public class DataSchema {
         if (match.find()) {
             if (match.group(1) != null) {
                 indexPointer = Integer.valueOf(match.group(1));
+                log.info("not support index now, {}", line);
+                System.exit(-1);
             }
         }
 
         invalid(line, repeat, indexPointer, item);
+        initial(item);
 
         if (indexPointer >= 0) {
-            item.generator = list.get(indexPointer).generator;
+            item.gen = list.get(indexPointer).gen;
         }
 
         for (int i = 0; i < repeat; i++) {
@@ -268,19 +274,21 @@ public class DataSchema {
                 System.exit(-1);
             }
 
-            if (!"numeric".equals(item.generator.toString())) {
-                log.info("parse schema [{}], integer generator can't be set as {}, only support numeric", line, item.generator);
-                System.exit(-1);
-            }
+            //if (!"numeric".equals(item.gen.toString())) {
+            //    log.info("parse schema [{}], integer gen can't be set as {}, only support numeric", line, item.gen);
+            //    System.exit(-1);
+            //}
 
         } else {
-            if ("numeric".equals(item.generator.toString())) {
-                log.info("parse schema [{}], string generator set as {}, only support numeric", line, equals(item.generator));
-                System.exit(-1);
-            }
+            item.len = (int)item.max;
 
-            if (item.min != 0 || item.count != 0) {
-                log.info("parse schema [{}], sring can't set min and count", line);
+            //if ("numeric".equals(item.gen.toString())) {
+            //    log.info("parse schema [{}], string gen set as {}, only support numeric", line, equals(item.gen));
+            //    System.exit(-1);
+            //}
+
+            if (item.min != 0) {
+                log.info("parse schema [{}], string can't set min", line);
                 System.exit(-1);
             }
         }
@@ -298,6 +306,10 @@ public class DataSchema {
         }
     }
 
+    public void initial(Item item) {
+        item.gen.set(item);
+    }
+
     /**
      * reduce schema count if not needed
      */
@@ -305,16 +317,6 @@ public class DataSchema {
         while (list.size() > count) {
             list.remove(list.size() - 1);
         }
-    }
-
-    public int maxField() {
-        int max = 0;
-        for (Item item : list) {
-            if (item.size > max) {
-                max = item.size;
-            }
-        }
-        return max;
     }
 
     /**
@@ -325,15 +327,15 @@ public class DataSchema {
         DataSchema schema = new DataSchema();
         schema.initialize("integer(56, 70),\t String[20]{5} @fix ");
         schema.initialize("String(20){5} @fix ");
-        schema.initialize("integer(56, 70), String(20)$0, $0");
 
         /**
          * invalid
          */
+        schema.initialize("integer(56, 70), String(20)$0, $0");
         //schema.initialize("integer(100, 200, 5000) ");        // count > max - min
-        //schema.initialize("integer(100) @fix ");              // generator
-        //schema.initialize("string(100) @numeric ");           // generator
-        //schema.initialize("string(100) @111 ");               // generator
+        //schema.initialize("integer(100) @fix ");              // gen
+        //schema.initialize("string(100) @numeric ");           // gen
+        //schema.initialize("string(100) @111 ");               // gen
         //schema.initialize("String(20, 10){5} @fix ");         // String不能设置 (min, max)，只有max
         //schema.initialize("integer(56, 70), String(20)$2 ");    // index 超过 list size
     }

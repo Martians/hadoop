@@ -1,31 +1,35 @@
 package com.data.util.data.generator;
 
+import com.data.base.Command;
 import com.data.base.IOPSThread;
 import com.data.util.schema.DataSchema;
+import com.data.util.sys.Common;
 
 import java.nio.CharBuffer;
 
 public class Sequence extends Random {
-    final static ThreadLocal<SeqBase> local = new ThreadLocal<>();
+    static final ThreadLocal<SeqBase> local = new ThreadLocal<>();
+    long min;
+    long max;
 
     static class SeqBase {
         SeqBase() {}
         SeqBase(long data, long last) {
-            this.start = data;
+            this.min = data;
+            this.max = last;
             this.data = data;
-            this.last = last;
         }
 
-        Object next() {
-            if (data == last) {
+        Long next() {
+            if (data == max) {
                 return null;
             }
             long next = data++;
             return next;
         }
-        long start = 0;
+        long min = 0;
+        long max = 0;
         long data = 0;
-        long last = 0;
     }
 
     static class SeqString extends SeqBase {
@@ -33,23 +37,61 @@ public class Sequence extends Random {
         }
         CharBuffer buffer;
 
-        Object next() {
-            return ++last;
+        Long next() {
+            return ++max;
         }
     }
 
     SeqBase getSequence() {
         SeqBase seq = local.get();
         if (seq == null) {
-            long piece = command.param.total / command.thread;
-            long data = piece * IOPSThread.index();
-            seq = new SeqBase(data, data + piece);
+            long total = Math.min(command.param.total, max - min + 1);
+            long piece = total / command.thread;
+
+            /**
+             * 最后一个piece确保执行到 max
+             */
+            long start = min + piece * threadIndex;
+            long end   = start + piece * 2 > max ? max : start + piece;
+
+            seq = new SeqBase(start, end);
             local.set(seq);
         }
         return seq;
     }
 
-    public Object get(DataSchema.Item item) {
-        return getSequence().next();
+    public void set(DataSchema.Item item) {
+        check("integer", item);
+        min = item.min;
+        max = item.max == 0 ? Long.MAX_VALUE : item.max;
+    }
+
+    @Override
+    public Long getLong() { return getSequence().next(); }
+
+    public static void main(String[] args) {
+        String arglist = String.format("-thread 1 -total 100000");
+        Command command = new Command(arglist.split(" "), true);
+        command.thread = 1;
+
+        DataSchema schema = new DataSchema();
+        DataSchema.Item item = schema.new Item();
+
+        item.type = DataSchema.Type.integer;
+        item.max = 1000;
+        item.min = 100;
+
+        Sequence rand = new Sequence();
+        rand.set(command);
+        rand.set(item);
+
+        for (int i = 0; i < 10000; i++) {
+            Long data = rand.getLong();
+            log.info("<{} {}", i, data);
+
+            if (data == null) {
+                break;
+            }
+        }
     }
 }

@@ -17,7 +17,7 @@ public class IOPSThread extends Thread {
     DataSource source;
     OutputSource output;
 
-    public final static ThreadLocal<Integer> local = new ThreadLocal<Integer>();
+    public static final ThreadLocal<Integer> local = new ThreadLocal<Integer>();
 
     IOPSThread(int index, Scheduler scheduler) {
         this.index = index;
@@ -53,7 +53,7 @@ public class IOPSThread extends Thread {
         Long total = 0L;
 
         try {
-            do {
+            while (true) {
                 /**
                  * 上一次取得的任务尚未完成，继续执行
                  *      不再从source中后去任务数，source的总个数是一定的，取走了就没有了
@@ -62,6 +62,11 @@ public class IOPSThread extends Thread {
                     success[2] = source.nextWork(command.param.fetch - success[0]) + success[0];
                 } else {
                     success[2] = source.nextWork(command.param.fetch);
+                }
+
+                if (success[2] == 0 || finished) {
+                    log.debug("complete work");
+                    break;
                 }
 
                 /**
@@ -92,7 +97,7 @@ public class IOPSThread extends Thread {
                 if (success[1] < 0) {
                     break;
                 }
-            } while (success[2] > 0 && !finished);
+            };
 
         } catch (Exception e) {
             //handler.terminate();

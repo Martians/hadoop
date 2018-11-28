@@ -58,7 +58,7 @@ public class HBaseHandler extends AppHandler {
     /**
      * 必须设置为线程变量，才能利用连接池
      */
-    final static ThreadLocal<Table> table = new ThreadLocal<>();
+    static final ThreadLocal<Table> table = new ThreadLocal<>();
 
     /**
      * ASYNC_WAL、SYNC_WAL、FSYNC_WAL、SKIP_WAL、USE_DEFAULT

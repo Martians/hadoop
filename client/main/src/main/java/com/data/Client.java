@@ -110,7 +110,7 @@ import org.slf4j.LoggerFactory;
  *      1）
  */
 public class Client {
-    final static Logger log = LoggerFactory.getLogger(Client.class);
+    static final Logger log = LoggerFactory.getLogger(Client.class);
 
     public static void main(String[] args) {
 

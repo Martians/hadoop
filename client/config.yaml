@@ -19,17 +19,17 @@ global:
 
   gen:
     seed: 100
-    key_type: rand
         # rand、uuid、seq、table、fix
-    data_type: rand
-
     data_path: test
     output:
       file_count: 10
       file_size: -1
 
   table:
-    schema: String(4), String(100)[2]
+    schema: String(4), String(100){2}
+        # integer @numeric、@sequence
+        # string  @random、@fixed、@table、@uuid
+
         # primary key ((key, column0), column1), index(column4, column5, column6)
         # schema: integer, String(4)[10]<(0, 1), 2>{5-7}
     keyspace: test_space
@@ -58,21 +58,18 @@ cassandra:
 ---
 #dump: true
 kafka:
-  host: 192.168.0.81:9092,192.168.0.82:9092,192.168.0.83:9092
-  clear: true
+  host: 192.168.0.81:9092
+  clear: false
 
   table:
-    schema: String(10), String(40960)[1]
-    replica: 2
+    schema: integer(1000), string(10)@table {10}
+    replica: 1
 
   work:
-    type: write
-    total: 100
+    type: generate
+    total: 10000
     thread: 1
-
-  gen:
-    key_type: rand
-    data_type: fix
+      # write、read; generate、load; scan
 
   topic:
     name: test
@@ -106,8 +103,6 @@ redis:
     thread: 3
 
   gen:
-    key_type: table
-    data_type: fix
     data_path: ''
 
   client: lettuce

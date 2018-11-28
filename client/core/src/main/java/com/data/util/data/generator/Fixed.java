@@ -2,33 +2,49 @@ package com.data.util.data.generator;
 import com.data.base.Command;
 import com.data.util.schema.DataSchema;
 
+import javax.xml.crypto.Data;
+
 public class Fixed extends Random {
 
     private char[] table_array = null;
 
     public void set(Command command) {
         super.set(command);
-
-        int len = 0;
-        //test
-        //int len = (command.schema.maxField() + 4096 - 1) / 4096 * 4096;
-        table_array = new char[len];
-
-        java.util.Random random = new java.util.Random();
-        random.setSeed(System.nanoTime());
-
-        for (int i = 0; i < len; i++) {
-            int index = random.nextInt() % KeyString.length();
-            table_array[i] = KeyString.charAt(Math.abs(index));
-        }
     }
 
-    public Object get(DataSchema.Item item) {
-        return new String(table_array, 0, item.size);
+    public void set(DataSchema.Item item) {
+        check("string", item);
+
+        int len = (item.len + 4096 - 1) / 4096 * 4096;
+        if (table_array == null || table_array.length < len) {
+            table_array = new char[len];
+
+            java.util.Random random = new java.util.Random();
+            random.setSeed(System.nanoTime());
+
+            for (int i = 0; i < len; i++) {
+                int index = random.nextInt() % KeyString.length();
+                table_array[i] = KeyString.charAt(Math.abs(index));
+            }
+        }
     }
 
     @Override
     public String getString(int length) {
         return new String(table_array, 0, length);
+    }
+
+    public static void main(String[] args) {
+        DataSchema schema = new DataSchema();
+        DataSchema.Item item = schema.new Item();
+        item.len = 20;
+        item.type = DataSchema.Type.string;
+
+        Fixed fix = new Fixed();
+        fix.set(item);
+
+        for (int i = 0; i < 100; i++) {
+            log.info("{}", fix.getString(10));
+        }
     }
 }

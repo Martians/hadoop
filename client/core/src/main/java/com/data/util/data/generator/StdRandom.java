@@ -43,7 +43,7 @@ package com.data.util.data.generator;
  *    - This library allows you to updateFromCommandLine and getInput the pseudo-random number seed.
  *
  *    - See http://www.honeylocust.com/RngPack/ for an industrial
- *      strength random number generator in Java.
+ *      strength random number gen in Java.
  *
  ******************************************************************************/
 
@@ -74,8 +74,8 @@ import java.util.Random;
  */
 public final class StdRandom {
 
-    private static Random random;    // pseudo-random number generator
-    private static long seed;        // pseudo-random number generator seed
+    private static Random random;    // pseudo-random number gen
+    private static long seed;        // pseudo-random number gen seed
 
     // static initializer
     static {
@@ -88,7 +88,7 @@ public final class StdRandom {
     private StdRandom() { }
 
     /**
-     * Sets the seed of the pseudo-random number generator.
+     * Sets the seed of the pseudo-random number gen.
      * This method enables you to produce the same sequence of "random"
      * number for each execution of the program.
      * Ordinarily, you should call this method at most once per program.
@@ -101,7 +101,7 @@ public final class StdRandom {
     }
 
     /**
-     * Returns the seed of the pseudo-random number generator.
+     * Returns the seed of the pseudo-random number gen.
      *
      * @return the seed
      */
@@ -628,7 +628,7 @@ public final class StdRandom {
 /*    public static void main(String[] args) {
         //int n = Integer.parseInt(args[0]);
         int n = Integer.parseInt("10");
-        if (args.length == 2) StdRandom.setSeed(Long.parseLong(args[1]));
+        if (args.length == 2) StdRandom.recordSeed(Long.parseLong(args[1]));
         double[] probabilities = { 0.5, 0.3, 0.1, 0.1 };
         int[] frequencies = { 5, 3, 1, 1 };
         String[] a = "A B C D E F G".split(" ");

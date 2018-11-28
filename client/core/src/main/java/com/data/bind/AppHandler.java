@@ -130,7 +130,7 @@ public class AppHandler {
         int index = 0;
         for (Object object : array) {
             if (index++ > 0) {
-                sb.append(CSV_SEP);
+                sb.append(", ");
             }
             sb.append(object);
         }

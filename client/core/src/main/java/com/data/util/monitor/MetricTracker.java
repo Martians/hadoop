@@ -9,7 +9,7 @@ public class MetricTracker extends Thread {
     final Logger log = LoggerFactory.getLogger(this.getClass());
 
     public static MetricTracker tracker;
-    final static ThreadLocal<long[]> local = new ThreadLocal<>();
+    static final ThreadLocal<long[]> local = new ThreadLocal<>();
 
     static public long incData(int index) {
         long[] array = local.get();

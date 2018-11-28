@@ -13,6 +13,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,15 +102,21 @@ public class KafkaHandler extends AppHandler {
     /**
      * consumer
      */
-    final static ThreadLocal<Consumer<String, String>> consumer = new ThreadLocal<>();
-    final static ThreadLocal<Boolean> consumerInitial = new ThreadLocal<Boolean>();
+    static final ThreadLocal<Consumer<String, String>> consumer = new ThreadLocal<>();
+    static final ThreadLocal<Boolean> consumerInitial = new ThreadLocal<Boolean>();
     private java.time.Duration poolTime = Duration.ofMillis(1000);
 
     void clusterInfo() {
         DescribeClusterResult result = admin.describeCluster();
         try {
             log.info("cluster info, controller {}", result.controller().get());
-            result.nodes().get().stream().forEach(v -> log.info("\t\t node: " + v));
+            Collection<Node> list = result.nodes().get();
+            list.stream().forEach(v -> log.info("\t\t node: " + v));
+
+            if (list.size() < command.getInt("table.replica")) {
+                log.info("get kafka cluster info, node count <{}> lower than replica count <{}>", list.size(), command.getInt("table.replica"));
+                System.exit(-1);
+            }
 
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -334,11 +341,11 @@ public class KafkaHandler extends AppHandler {
             //config.put("partitioner.class", 1); // org.apache.kafka.clients.producer.internals.DefaultPartitioner
 
             if (true) {
-                config.put("key.serializer", "org.apache.kafka.Common.serialization.StringSerializer");
-                config.put("value.serializer", "org.apache.kafka.Common.serialization.StringSerializer");
+                config.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+                config.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
             } else {
-                config.put("key.serializer", "org.apache.kafka.Common.serialization.ByteArraySerializer");
-                config.put("value.serializer", "org.apache.kafka.Common.serialization.ByteArraySerializer");
+                config.put("key.serializer", "org.apache.kafka.common.serialization.ByteArraySerializer");
+                config.put("value.serializer", "org.apache.kafka.common.serialization.ByteArraySerializer");
             }
             producer = new KafkaProducer<>(config);
         }
@@ -446,11 +453,11 @@ public class KafkaHandler extends AppHandler {
     }
 
     public void fixSchema() {
-        int max_count = 2;
-        if (command.schema.list.size() > max_count) {
-            log.info("======> kafka only need 1 field, fix schema");
-            command.schema.limit(max_count);
-        }
+        //int max_count = 2;
+        //if (command.schema.list.size() > max_count) {
+        //    log.info("======> kafka only need 1 field, fix schema");
+        //    command.schema.limit(max_count);
+        //}
     }
 
     private void initTopic() {
@@ -476,22 +483,34 @@ public class KafkaHandler extends AppHandler {
     
     /////////////////////////////////////////////////////////////////////////////////////////////////
     public int write(int[] result, int batch) {
-        //for (int i = 0; i < batch; i++) {
+        for (int i = 0; i < batch; i++) {
 
-        List<DataSchema.Item> list = command.schema.list;
-        DataSource.Wrap wrap = source.next();
-        if (wrap == null) {
-            log.debug("write get null, completed");
-            return -1;
+            List<DataSchema.Item> list = command.schema.list;
+            DataSource.Wrap wrap = source.next();
+            if (wrap == null) {
+                log.debug("write get null, completed");
+                return -1;
+            }
+
+            if (list.size() == 2) {
+                producer.send(new ProducerRecord<>(nextTopic(),
+                        list.get(0).isString() ? (String) wrap.array[0] : wrap.array[0].toString(),
+                        list.get(1).isString() ? (String) wrap.array[1] : wrap.array[1].toString()));
+            } else {
+                StringBuilder sb = new StringBuilder();
+                for (int index = 1; index < wrap.array.length; index++) {
+                    if (index > 1) {
+                        sb.append(", ");
+                    }
+                    sb.append(wrap.array[index]);
+                }
+                producer.send(new ProducerRecord<>(nextTopic(),
+                        list.get(0).isString() ? (String) wrap.array[0] : wrap.array[0].toString(),
+                        sb.toString()));
+            }
+            result[0] += 1;
+            result[1] += wrap.size;
         }
-
-        producer.send(new ProducerRecord<>(nextTopic(),
-            list.get(0).isString() ? (String) wrap.array[0] : wrap.array[0].toString(),
-            list.get(1).isString() ? (String) wrap.array[1] : wrap.array[1].toString()));
-
-        result[0] += 1;
-        result[1] += wrap.size;
-
         /**
          * 促使buffer中的数据立即发送出去
          */

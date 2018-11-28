@@ -123,9 +123,10 @@ public class Command extends BaseCommand {
     //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public String dumpLoad() {
-        assert(false);
-        return String.format("type: [%s, %s], %s, clear: %s",
-                type, get("gen.key_type"), get("gen.data_type"), get("clear"));
+        List<DataSchema.Item> list = schema.list;
+        assert(list.size() >= 2);
+        return String.format("type: [%s] gen <%s %s>, clear: %s",
+                type, list.get(0).gen, list.get(1).gen, get("clear"));
     }
 
     /**
@@ -213,12 +214,13 @@ public class Command extends BaseCommand {
             System.exit(-1);
         }
 
-        if (schema.list.get(0).type == DataSchema.Type.string) {
-            if (get("gen.key_type").equals("seq")) {
-                log.info("not support sequence string now, change sequence to false");
-                System.exit(-1);
-            }
-        }
+        //test
+        //if (schema.list.get(0).type == DataSchema.Type.string) {
+        //    if (get("gen.key_type").equals("seq")) {
+        //        log.info("not support sequence string now, change sequence to false");
+        //        System.exit(-1);
+        //    }
+        //}
 
         if (getBool("table.keyspace_auto")) {
             String host = getHost();

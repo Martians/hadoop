@@ -13,12 +13,16 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class Random {
     static final Logger log = LoggerFactory.getLogger(Random.class);
+
+    static final String KeyString = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+    static final ThreadLocal<java.util.Random> rand = new ThreadLocal<>();
+    long threadIndex = 0;
+    long recordSeed = 0;
+
+    long setCount = 0;
+
     protected Command command;
-
-    final static String KeyString = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
-    final static ThreadLocal<java.util.Random> rand = new ThreadLocal<>();
-
     public void set(Command command) {
         this.command = command;
     }
@@ -49,9 +53,17 @@ public class Random {
             return new Numeric();
 
         } else {
-            log.info("unknown generator: {}", name);
+            log.info("unknown generator: {}, valid: numeric, random, fixed, sequence, table, uuid", name);
             System.exit(-1);
             return null;
+        }
+    }
+
+    public static void defaultRandom(DataSchema.Item item) {
+        if (item.type == DataSchema.Type.integer) {
+            item.gen = newRandom("numeric");
+        } else {
+            item.gen = newRandom("random");
         }
     }
 
@@ -59,11 +71,31 @@ public class Random {
      * every thread updateFromCommandLine different seed
      */
     public void threadPrepare(int index) {
+        threadIndex = index;
         long seed = command.getLong("gen.seed");
 
-        if (seed != 0) {
-            getRandom().setSeed(seed + index);
+        /**
+         * seed 确保只设置一次
+         */
+        if (seed != 0 && recordSeed == 0) {
+            recordSeed = seed + index;
+            getRandom().setSeed(recordSeed);
         }
+    }
+
+    public void set(DataSchema.Item item) {
+        check("integer, string", item);
+    }
+
+    public void check(String support, DataSchema.Item item) {
+        if (support.indexOf(item.type.toString()) == -1) {
+            log.info("generator [{}] not support schema type [{}], item: {}", this, item.type, item);
+            System.exit(-1);
+        }
+    }
+
+    public void update(DataSchema.Item item) {
+        setCount = item.count;
     }
 
     protected java.util.Random getRandom() {
@@ -83,16 +115,20 @@ public class Random {
         }
     }
 
-    public Object get(DataSchema.Item item) {
+    final public Object get(DataSchema.Item item) {
         Object object = null;
 
         switch (item.type) {
-            case string:
-                object = getString(item.size);
-                break;
-            case integer:
+            case string: {
+                object = getString(item.len);
+                item.curr = item.len + 4;
+            } break;
+
+            case integer: {
                 object = getLong();
-                break;
+                item.curr = 4;
+            } break;
+
             default:
                 log.error("unknown type: {}", item.type);
                 System.exit(-1);

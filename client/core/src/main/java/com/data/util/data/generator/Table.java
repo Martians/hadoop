@@ -2,6 +2,7 @@ package com.data.util.data.generator;
 
 import com.data.base.Command;
 import com.data.util.common.Formatter;
+import com.data.util.schema.DataSchema;
 import com.data.util.test.ThreadTest;
 import io.netty.util.internal.ConcurrentSet;
 import org.slf4j.Logger;
@@ -29,7 +30,7 @@ public class Table extends Random {
     }
     
     static TableArray table_array;
-    final static ThreadLocal<char[]> local = new ThreadLocal<>();
+    static final ThreadLocal<char[]> local = new ThreadLocal<>();
 
     final int UNIT_LENGTH = 1 * 1024;
     final int UNIT_COUNTS = 256;
@@ -47,6 +48,10 @@ public class Table extends Random {
 
         /** 每个线程池的缓冲数据大小 */
         threadLen = 256 * 1024;
+    }
+
+    public void set(DataSchema.Item item) {
+        check("string", item);
     }
 
     private char[] threadArray() {

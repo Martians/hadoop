@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ThreadTest {
-    final static Logger log = LoggerFactory.getLogger(ThreadTest.class);
+    static final Logger log = LoggerFactory.getLogger(ThreadTest.class);
 
     long start = 0;
     long total = 0;

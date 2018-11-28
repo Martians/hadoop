@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MemCache {
-    final static Logger log = LoggerFactory.getLogger(MemCache.class);
+    static final Logger log = LoggerFactory.getLogger(MemCache.class);
 
     public static Command command;
 
@@ -46,7 +46,7 @@ public class MemCache {
     public long getTotal() { return total; }
 
     /** 每个client使用的临时缓冲 */
-    public final static ThreadLocal<LineChunk> local = new ThreadLocal<LineChunk>();
+    public static final ThreadLocal<LineChunk> local = new ThreadLocal<LineChunk>();
 
     /**  循环使用的阻塞队列 */
     public ArrayBlockingQueue<LineChunk> dataList =

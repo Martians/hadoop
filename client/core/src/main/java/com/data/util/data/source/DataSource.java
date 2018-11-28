@@ -31,8 +31,12 @@ public class DataSource {
     public void initialize() {
         total.getAndSet(command.param.total);
 
+        /**
+         * 初始化相关的 Genertor
+         */
         for (DataSchema.Item item : command.schema.list) {
-            item.generator.set(command);
+            item.gen.set(command);
+            item.gen.update(item);
         }
 
         //test
@@ -41,32 +45,10 @@ public class DataSource {
         //}
     }
 
-    Random create(String type) {
-        if (type.equals("rand")) {
-            return new Random();
-
-        } else if (type.equals("uuid")) {
-            return new UUID();
-
-        } else if (type.equals("seq")) {
-            return new Sequence();
-
-        } else if (type.equals("table")) {
-            return new Table();
-
-        } else if (type.equals("fix")) {
-            return new Fixed();
-
-        } else {
-            assert false: "unknown source [" + type + "]";
-            return null;
-        }
-    }
-
     public void threadPrepare(int index) {
         int itemIndex = 0;
         for (DataSchema.Item item : command.schema.list) {
-            item.generator.threadPrepare(index + itemIndex);
+            item.gen.threadPrepare(index + itemIndex);
             itemIndex++;
         }
     }
@@ -127,9 +109,10 @@ public class DataSource {
         List<DataSchema.Item> list = schema.list;
         Object[] array = new Object[list.size()];
 
+        int size = 0;
         for (int i = 0; i < array.length; i++) {
             DataSchema.Item item = list.get(i);
-            array[i] = item.generator.get(item);
+            array[i] = item.gen.get(item);
 
             /**
              * if use sequence, every thread load command.param.total/thread
@@ -137,16 +120,7 @@ public class DataSource {
             if (array[i] == null) {
                 return null;
             }
-        }
-
-        int size = 0;
-        for (int i = 1; i < list.size(); i++) {
-            DataSchema.Item item = list.get(i);
-
-            array[i] = data.get(item);
-
-            //test
-            //size += item.actual();
+            size += item.curr;
         }
         return new Wrap(array, size);
     }
