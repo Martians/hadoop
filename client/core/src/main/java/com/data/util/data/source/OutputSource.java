@@ -38,6 +38,11 @@ public class OutputSource extends Thread {
 
         thread = new Thread(this, "output stream");
         thread.start();
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     protected void clearFiles() {
@@ -183,6 +188,7 @@ public class OutputSource extends Thread {
             for (Output out : list) {
                 try {
                     out.writer.close();
+                    log.info("--------------");
                 } catch (IOException e) {
                     System.out.println("close file Error: " + e);
                     System.exit(-1);

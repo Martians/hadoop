@@ -125,6 +125,7 @@ public class Command extends BaseCommand {
     public String dumpLoad() {
         List<DataSchema.Item> list = schema.list;
         assert(list.size() >= 2);
+
         return String.format("type: [%s] gen <%s %s>, clear: %s",
                 type, list.get(0).gen, list.get(1).gen, get("clear"));
     }
