@@ -2,7 +2,7 @@ package com.data.bind;
 
 import com.data.util.data.source.DataSource;
 import com.data.util.monitor.MetricTracker;
-import com.data.util.schema.ColumnSchema;
+import com.data.util.schema.DataSchema;
 import com.datastax.driver.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -355,7 +355,7 @@ public class CassandraHandler extends AppHandler {
         Object[] array = new Object[command.schema.primaryKey.size()];
         int index = 0;
         for (Integer p : command.schema.primaryKey) {
-            ColumnSchema.Item item = command.schema.list.get(p);
+            DataSchema.Item item = command.schema.list.get(p);
             array[index] = wrap.array[p];
             index++;
         }

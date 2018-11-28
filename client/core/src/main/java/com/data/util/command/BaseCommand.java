@@ -479,7 +479,7 @@ public class BaseCommand {
          * 对其他几个，当前没有 load 的 bind 类型，忽略其相关参数
          *      先将需要被忽略的前缀，全部收集起来
          */
-        String[] array = validBind.split("[,\t]");
+        String[] array = validBind.toLowerCase().split("[,\t]");
         List<String> ignore = new ArrayList<>();
         for (String bind : array) {
             bind = bind.trim();

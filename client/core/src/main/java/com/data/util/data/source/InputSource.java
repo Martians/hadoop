@@ -2,7 +2,7 @@ package com.data.util.data.source;
 
 import com.data.base.Command;
 import com.data.util.data.generator.Random;
-import com.data.util.schema.ColumnSchema;
+import com.data.util.schema.DataSchema;
 import com.data.util.test.ThreadTest;
 import com.data.util.common.Formatter;
 import org.slf4j.Logger;
@@ -15,7 +15,6 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static com.data.util.Define.CSV_SEP;
-import static com.data.util.schema.ColumnSchema.Type.integer;
 import static com.data.util.test.ThreadTest.debugThread;
 
 public class InputSource extends DataSource implements Runnable {
@@ -75,19 +74,20 @@ public class InputSource extends DataSource implements Runnable {
         array = new Object[command.schema.list.size()];
         System.arraycopy(split, 0, array, 0, command.schema.list.size());
 
-        for (ColumnSchema.Item item : command.schema.list) {
-            if (item.type == integer) {
-                array[index] = Long.parseLong(split[index]);
-            }
-            size += item.actual();
-            index++;
+        for (DataSchema.Item item : command.schema.list) {
+            //test
+            //if (item.type == integer) {
+            //    array[index] = Long.parseLong(split[index]);
+            //}
+            //size += item.actual();
+            //index++;
         }
 
         //} else {
         //    array = new Object[command.schema.primaryKey.size()];
         //
         //    for (Integer p : command.schema.primaryKey) {
-        //        ColumnSchema.Item item = command.schema.list.get(p);
+        //        DataSchema.Item item = command.schema.list.get(p);
         //        if (item.type == integer) {
         //            split[index] = Long.parseLong((String)split[p]);
         //        }

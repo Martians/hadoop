@@ -64,7 +64,8 @@ public class DataSchema {
          */
         public int size;
 
-        Random generator;
+        public Random generator;
+        boolean key;
 
         public Item newItem(int index) {
             Item one = new Item();
@@ -104,6 +105,10 @@ public class DataSchema {
             }
             return sb.toString();
         }
+
+        public boolean isString() {
+            return type == Type.string;
+        }
     }
 
     public List<Item> list = new ArrayList<>();
@@ -139,7 +144,7 @@ public class DataSchema {
                 parse(value.toLowerCase());
             }
         }
-        log.info("{}", this);
+        log.debug("{}", this);
     }
 
     public String toString() {
@@ -163,7 +168,7 @@ public class DataSchema {
     }
 
     public void parse(String line) {
-        log.info("parse: {}", line);
+        log.debug("parse: {}", line);
         Item item = new Item();
 
         String typePartten = "^\\w+";
@@ -291,6 +296,25 @@ public class DataSchema {
                 System.exit(-1);
             }
         }
+    }
+
+    /**
+     * reduce schema count if not needed
+     */
+    public void limit(int count) {
+        while (list.size() > count) {
+            list.remove(list.size() - 1);
+        }
+    }
+
+    public int maxField() {
+        int max = 0;
+        for (Item item : list) {
+            if (item.size > max) {
+                max = item.size;
+            }
+        }
+        return max;
     }
 
     /**

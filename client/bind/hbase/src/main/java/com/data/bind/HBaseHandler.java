@@ -1,7 +1,7 @@
 package com.data.bind;
 
 import com.data.util.data.source.DataSource;
-import com.data.util.schema.ColumnSchema;
+import com.data.util.schema.DataSchema;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.*;
 import org.apache.hadoop.hbase.client.*;
@@ -237,13 +237,13 @@ public class HBaseHandler extends AppHandler {
             result[0] += 1;
             result[1] += wrap.size;
 
-            ColumnSchema schema = command.schema;
+            DataSchema schema = command.schema;
             int index = 0;
 
             Put put = new Put(Bytes.toBytes((String) wrap.array[0]));
             put.setDurability(durability);
 
-            for (ColumnSchema.Item s : schema.list) {
+            for (DataSchema.Item s : schema.list) {
                 if (index > 0) {
                     put.addColumn(columnFamilyBytes,
                             Bytes.toBytes(schema.tableClumnPrefix(index)),

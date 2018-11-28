@@ -1,7 +1,7 @@
 package com.data.util.data.generator;
 
 import com.data.base.IOPSThread;
-import com.data.util.schema.ColumnSchema;
+import com.data.util.schema.DataSchema;
 
 import java.nio.CharBuffer;
 
@@ -49,7 +49,7 @@ public class Sequence extends Random {
         return seq;
     }
 
-    public Object get(ColumnSchema.Item item) {
+    public Object get(DataSchema.Item item) {
         return getSequence().next();
     }
 }

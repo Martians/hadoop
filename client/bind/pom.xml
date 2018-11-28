@@ -20,8 +20,8 @@
     </parent>
 
     <modules>
-        <module>cassandra</module>
-        <module>hbase</module>
+        <!--<module>cassandra</module>-->
+        <!--<module>hbase</module>-->
         <module>kafka</module>
         <module>redis</module>
         <!--<module>mapr</module>-->

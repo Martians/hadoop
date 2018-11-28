@@ -4,7 +4,7 @@ import com.data.bind.ClientOption;
 import com.data.util.command.BaseCommand;
 import com.data.util.command.BaseOption;
 import com.data.util.common.Formatter;
-import com.data.util.schema.ColumnSchema;
+import com.data.util.schema.DataSchema;
 import com.data.util.data.source.DataSource;
 import com.data.util.data.source.InputSource;
 import com.data.util.data.source.MemCache;
@@ -37,7 +37,7 @@ public class Command extends BaseCommand {
     public Type type;
     public int  thread;
     public ClientParam param;
-    public ColumnSchema schema = new ColumnSchema();
+    public DataSchema schema = new DataSchema();
 
     /**
      * 内部状态
@@ -67,7 +67,7 @@ public class Command extends BaseCommand {
         addParser("table",  new ClientOption.Table());
         addParser("cache",  new MemCache.BaseOption());
 
-        validBind = "kafka, cassandra, hbase";
+        validBind = "kafka, cassandra, hbase, redis";
     }
 
     protected void parseDynamic(String[] args) {
@@ -123,6 +123,7 @@ public class Command extends BaseCommand {
     //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public String dumpLoad() {
+        assert(false);
         return String.format("type: [%s, %s], %s, clear: %s",
                 type, get("gen.key_type"), get("gen.data_type"), get("clear"));
     }
@@ -165,7 +166,8 @@ public class Command extends BaseCommand {
     void parseSchema() {
         schema.initialize(get("table.schema"));
 
-        schema.updateKeySchema(get("gen.key_type"));
+        //test
+        //schema.updateKeySchema(get("gen.key_type"));
     }
 
     void checkParam() {
@@ -211,7 +213,7 @@ public class Command extends BaseCommand {
             System.exit(-1);
         }
 
-        if (schema.list.get(0).type == ColumnSchema.Type.string) {
+        if (schema.list.get(0).type == DataSchema.Type.string) {
             if (get("gen.key_type").equals("seq")) {
                 log.info("not support sequence string now, change sequence to false");
                 System.exit(-1);

@@ -4,7 +4,7 @@ import com.data.base.Command;
 import com.data.base.IOPSThread;
 import com.data.util.data.source.DataSource;
 
-import com.data.util.schema.ColumnSchema;
+import com.data.util.schema.DataSchema;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -478,7 +478,7 @@ public class KafkaHandler extends AppHandler {
     public int write(int[] result, int batch) {
         //for (int i = 0; i < batch; i++) {
 
-        List<ColumnSchema.Item> list = command.schema.list;
+        List<DataSchema.Item> list = command.schema.list;
         DataSource.Wrap wrap = source.next();
         if (wrap == null) {
             log.debug("write get null, completed");

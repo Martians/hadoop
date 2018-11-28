@@ -1,7 +1,7 @@
 package com.data.util.data.generator;
 
 import com.data.base.Command;
-import com.data.util.schema.ColumnSchema;
+import com.data.util.schema.DataSchema;
 import com.data.util.test.ThreadTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,7 +83,7 @@ public class Random {
         }
     }
 
-    public Object get(ColumnSchema.Item item) {
+    public Object get(DataSchema.Item item) {
         Object object = null;
 
         switch (item.type) {

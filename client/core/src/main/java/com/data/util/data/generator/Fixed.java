@@ -1,6 +1,6 @@
 package com.data.util.data.generator;
 import com.data.base.Command;
-import com.data.util.schema.ColumnSchema;
+import com.data.util.schema.DataSchema;
 
 public class Fixed extends Random {
 
@@ -9,7 +9,9 @@ public class Fixed extends Random {
     public void set(Command command) {
         super.set(command);
 
-        int len = (command.schema.maxField() + 4096 - 1) / 4096 * 4096;
+        int len = 0;
+        //test
+        //int len = (command.schema.maxField() + 4096 - 1) / 4096 * 4096;
         table_array = new char[len];
 
         java.util.Random random = new java.util.Random();
@@ -21,7 +23,7 @@ public class Fixed extends Random {
         }
     }
 
-    public Object get(ColumnSchema.Item item) {
+    public Object get(DataSchema.Item item) {
         return new String(table_array, 0, item.size);
     }
 

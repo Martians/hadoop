@@ -41,8 +41,8 @@ public class ClientOption {
         protected void initialize() {
 
             addOption("seed",  "random seed",0);
-            addOption("key_type",  "key type：rand、uuid、seq、table、fix", "rand");
-            addOption("data_type",  "key type：rand、uuid、seq、table、fix", "rand");
+            //addOption("key_type",  "key type：rand、uuid、seq、table、fix", "rand");
+            //addOption("data_type",  "key type：rand、uuid、seq、table、fix", "rand");
 
             addOption("data_path", "data file path; if setted, output[generate、scan], input[load、read]", "");
             addOption("output.file_count", "min output file count", 1);

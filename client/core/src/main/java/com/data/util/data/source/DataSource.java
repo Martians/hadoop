@@ -3,7 +3,7 @@ package com.data.util.data.source;
 import com.data.base.Command;
 import com.data.util.data.generator.*;
 import com.data.util.common.Formatter;
-import com.data.util.schema.ColumnSchema;
+import com.data.util.schema.DataSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,9 +17,7 @@ public class DataSource {
     static final Logger log = LoggerFactory.getLogger(DataSource.class);
 
     protected Command command;
-    ColumnSchema schema;
-    Random key;
-    Random data;
+    DataSchema schema;
 
     private AtomicLong total = new AtomicLong(0);
     private boolean sequence = false;
@@ -33,15 +31,14 @@ public class DataSource {
     public void initialize() {
         total.getAndSet(command.param.total);
 
-        key = create(command.get("gen.key_type"));
-        key.set(command);
-
-        data = create(command.get("gen.data_type"));
-        data.set(command);
-
-        if (command.get("gen.key_type").equals("seq")) {
-            sequence = true;
+        for (DataSchema.Item item : command.schema.list) {
+            item.generator.set(command);
         }
+
+        //test
+        //if (command.get("gen.key_type").equals("seq")) {
+        //    sequence = true;
+        //}
     }
 
     Random create(String type) {
@@ -67,12 +64,10 @@ public class DataSource {
     }
 
     public void threadPrepare(int index) {
-        if (key != null) {
-            key.threadPrepare(index);
-        }
-
-        if (data != null) {
-            data.threadPrepare(index + 5000);
+        int itemIndex = 0;
+        for (DataSchema.Item item : command.schema.list) {
+            item.generator.threadPrepare(index + itemIndex);
+            itemIndex++;
         }
     }
 
@@ -129,24 +124,29 @@ public class DataSource {
     }
 
     public Wrap next() {
-        Object[] array = new Object[schema.list.size()];
+        List<DataSchema.Item> list = schema.list;
+        Object[] array = new Object[list.size()];
 
-        List<ColumnSchema.Item> list = schema.list;
-        array[0] = key.get(list.get(0));
+        for (int i = 0; i < array.length; i++) {
+            DataSchema.Item item = list.get(i);
+            array[i] = item.generator.get(item);
 
-        /**
-         * if use sequence, every thread load command.param.total/thread
-         */
-        if (array[0] == null) {
-            return null;
+            /**
+             * if use sequence, every thread load command.param.total/thread
+             */
+            if (array[i] == null) {
+                return null;
+            }
         }
 
         int size = 0;
         for (int i = 1; i < list.size(); i++) {
-            ColumnSchema.Item item = list.get(i);
+            DataSchema.Item item = list.get(i);
 
             array[i] = data.get(item);
-            size += item.actual();
+
+            //test
+            //size += item.actual();
         }
         return new Wrap(array, size);
     }
@@ -165,7 +165,7 @@ public class DataSource {
     //    }
     //
     //    for (Integer p : schema.primaryKey) {
-    //        ColumnSchema.Item s = schema.list.get(p);
+    //        DataSchema.Item s = schema.list.get(p);
     //
     //        if (array[index] == null) {
     //            switch (s.type) {

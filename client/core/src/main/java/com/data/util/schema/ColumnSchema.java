@@ -9,13 +9,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ColumnSchema {
-    static final Logger log = LoggerFactory.getLogger(ColumnSchema.class);
-
-    public enum Type {
-        string,
-        integer,
-    };
+public class ColumnSchema extends DataSchema {
+    static final Logger log = LoggerFactory.getLogger(DataSchema.class);
 
     public String tableTypeName(Type type) {
         switch (type) {
@@ -45,75 +40,24 @@ public class ColumnSchema {
             return ", " + str;
         }
     }
-
-    /**
-     * schema item
-     */
-    public class Item {
-        public Item newItem(int index) {
-            Item one = new Item();
-            one.index = index;
-            one.size = size;
-            one.min =  min;
-            one.max = max;
-            one.type = type;
-            return one;
-        }
-
-        public int actual() {
-            return type == Type.string ? size + 4 : 8;
-        }
-
-        public void fix() {
-            if (type == Type.string && size == 0) {
-                size = 4;
-            }
-        }
-
-        public boolean isString() {
-            return type == Type.string;
-        }
-
-        public int index;
-        public int size;
-        public int min;
-        public int max;
-        public Type type;
-        public boolean key;
-    }
-
+    
     Integer schemaSize = 0;
-    public int fixedSize() {
-        if (schemaSize == 0) {
-            synchronized (schemaSize) {
-                if (schemaSize == 0) {
-                    for (Item item : list) {
-                        schemaSize += item.actual();
-                    }
-                }
-            }
-        }
-        return schemaSize;
-    }
+    //public int fixedSize() {
+    //    if (schemaSize == 0) {
+    //        synchronized (schemaSize) {
+    //            if (schemaSize == 0) {
+    //                for (Item item : list) {
+    //                    schemaSize += item.actual();
+    //                }
+    //            }
+    //        }
+    //    }
+    //    return schemaSize;
+    //}
 
-    /**
-     * reduce schema count if not needed
-     */
-    public void limit(int count) {
-        while (list.size() > count) {
-            list.remove(list.size() - 1);
-        }
-    }
 
-    public int maxField() {
-        int max = 0;
-        for (Item item : list) {
-            if (item.size > max) {
-                max = item.size;
-            }
-        }
-        return max;
-    }
+
+
 
 //    static public int getSize(Type type, int size) {
 //        return type == Type.string ? size + 4 : 8;
@@ -138,10 +82,10 @@ public class ColumnSchema {
             }
 
             if (match.group(1) != null) {
-                partitionKey = parse(match.group(1));
+                partitionKey = parseList(match.group(1));
             }
             if (match.group(2) != null) {
-                clustringKey = parse(match.group(2));
+                clustringKey = parseList(match.group(2));
             }
             primaryString = value.substring(match.start(0), match.end(0));
             value = value.substring(0, match.start(0)) +
@@ -149,7 +93,6 @@ public class ColumnSchema {
 
             log.trace("remain value: {} ", value);
         }
-
 
         String indexPartten = "(\\{(.+)\\})";
         pattern = Pattern.compile(indexPartten);
@@ -159,45 +102,13 @@ public class ColumnSchema {
             for (int i = 1; i <= match.groupCount(); i++) {
                 log.trace("\t\t {} - {}", i, match.group(i));
             }
-            indexKey = parse(match.group(1));
+            indexKey = parseList(match.group(1));
 
             indexString = value.substring(match.start(0), match.end(0));
             value = value.substring(0, match.start(0)) +
                     value.substring(match.end(0));
 
             log.trace("remain value: {} ", value);
-        }
-
-        String pitem = "(\\w+)(\\((\\d+)\\))*(\\[(\\d+)\\])*";
-        pattern = Pattern.compile(pitem);
-        match = pattern.matcher(value);
-
-        int index = 0;
-        while (match.find()) {
-            log.trace("table part: {}", value);
-            for (int i = 1; i <= match.groupCount(); i++) {
-                log.trace("\t\t {} - {}", i, match.group(i));
-            }
-            log.trace("-- {}, {}, {}, {}", match.group(), match.group(1), match.group(3), match.group(5));
-
-            Item item = new Item();
-            item.index = index++;
-
-            if (match.group(1) != null) {
-                item.type = Type.valueOf(match.group(1).toLowerCase());
-            }
-            if (match.group(3) != null) {
-                item.size = Integer.valueOf(match.group(3).toLowerCase());
-            }
-            item.fix();
-            list.add(item);
-
-            if (match.group(5) != null) {
-                int loop = Integer.valueOf(match.group(5));
-                for (int i = 0; i < loop - 1; i++) {
-                    list.add(item.newItem(index++));
-                }
-            }
         }
 
         fixPrimaryKey();
@@ -209,7 +120,7 @@ public class ColumnSchema {
         //}
     }
 
-    List<Integer> parse(String value) {
+    List<Integer> parseList(String value) {
         String primaryPartten = "(\\d+)(-(\\d+))?";
         Pattern pattern = Pattern.compile(primaryPartten);
         Matcher match = pattern.matcher(value);
@@ -415,33 +326,33 @@ public class ColumnSchema {
          *  schema=integer, String(4)[2]<(0), 1>
          *  schema=integer, String(4)[2]<(0, 1)>
          */
-        ColumnSchema schema = null;
+        DataSchema schema = null;
 
-        schema = new ColumnSchema();
+        schema = new DataSchema();
         schema.initialize("integer ,string(2)[10], integer[8]");
 
-        schema = new ColumnSchema();
+        schema = new DataSchema();
         schema.initialize("integer ,string(2)[10], integer[8]<0>");
 
-        schema = new ColumnSchema();
+        schema = new DataSchema();
         schema.initialize("integer ,string(2)[10], integer[8]<(0)>");
 
-        schema = new ColumnSchema();
+        schema = new DataSchema();
         schema.initialize("integer ,string(2)[10], integer[8]<(1, 2)>");
 
-        schema = new ColumnSchema();
+        schema = new DataSchema();
         schema.initialize("integer ,string(2)[10], integer[8]<(0), 1>");
 
-        schema = new ColumnSchema();
+        schema = new DataSchema();
         schema.initialize("integer ,string(2)[10], integer[8]<0, 1>");
 
-        schema = new ColumnSchema();
+        schema = new DataSchema();
         schema.initialize("integer ,string(2)[10], integer[8]<(2), 1, 5>{8-10}");
 
-        schema = new ColumnSchema();
+        schema = new DataSchema();
         schema.initialize("integer ,string(2)[10], integer[8]<(2, 1), 0, 7-10, 5>{8-10}");
 
-        schema = new ColumnSchema();
+        schema = new DataSchema();
         schema.initialize("integer ,string(2)[10], integer[8]{8-10, 200 }");
 //        schema.initialize("integer[8], <1, 5>{8-10}");
     }
