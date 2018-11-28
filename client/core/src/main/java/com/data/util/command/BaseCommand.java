@@ -1,5 +1,6 @@
 package com.data.util.command;
 
+import com.data.base.Command;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +57,17 @@ public class BaseCommand {
      * when use strict mode, ignore these prefix
      */
     protected String validBind = "";
+
+    public class ClientParam {
+
+        public Long  total = getLong("work.total");
+        public int   batch = Integer.max(getInt("work.batch"), 1);
+        public int   thread = getInt("work.thread");
+
+        public int   fetch = getInt("work.fetch");
+        public long  seed  = getLong("gen.seed");
+    }
+    public ClientParam param;
 
     class Common extends BaseOption {
         Common() {
@@ -251,7 +263,10 @@ public class BaseCommand {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
     protected void registParser() {}
     protected void parseDynamic(String[] args) {}
-    protected void validate() {}
+
+    protected void validate() {
+        param = new ClientParam();
+    }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
     public void initialize(String[] args) {

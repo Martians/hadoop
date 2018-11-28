@@ -1,14 +1,14 @@
-package com.data.util.data.source;
+package com.data.source;
 
 import com.data.base.Command;
 import com.data.util.common.Formatter;
+import com.data.util.disk.Disk;
 import com.data.util.test.ThreadTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 
 public class OutputSource implements Runnable {
@@ -45,27 +45,7 @@ public class OutputSource implements Runnable {
     }
 
     protected void clearFiles() {
-        List<Path> pathList = new ArrayList<>();
-        class DeleteFileVisitor extends SimpleFileVisitor<Path> {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                if (file.toString().endsWith("csv")) {
-                    Files.delete(file);
-                    pathList.add(file);
-                    log.info("delete file: {}", file);
-                }
-                return FileVisitResult.CONTINUE;
-            }
-        }
-
-        try {
-            Files.createDirectories(Paths.get(command.dataPath()));
-            Path path = Paths.get(command.dataPath());
-            Files.walkFileTree(path, new DeleteFileVisitor());
-
-        } catch(IOException e) {
-            System.out.println("I/O Error: " + e);
-        }
+        List<Path> pathList = Disk.deletePath(command.dataPath(), "csv");
         log.info("try to clear, file range: {}", pathList.size());
     }
 

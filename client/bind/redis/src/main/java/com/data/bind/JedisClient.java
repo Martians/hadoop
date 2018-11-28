@@ -1,6 +1,6 @@
 package com.data.bind;
 
-import com.data.util.data.source.DataSource;
+import com.data.source.DataSource;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPool;

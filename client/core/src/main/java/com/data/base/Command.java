@@ -5,11 +5,11 @@ import com.data.util.command.BaseCommand;
 import com.data.util.command.BaseOption;
 import com.data.util.common.Formatter;
 import com.data.util.schema.DataSchema;
-import com.data.util.data.source.DataSource;
-import com.data.util.data.source.InputSource;
-import com.data.util.data.source.MemCache;
-import com.data.util.data.source.ScanSource;
-import com.data.util.monitor.MetricTracker;
+import com.data.source.DataSource;
+import com.data.source.InputSource;
+import com.data.source.MemCache;
+import com.data.source.ScanSource;
+import com.data.monitor.MetricTracker;
 import com.data.util.sys.ExtClassPathLoader;
 import com.data.bind.AppHandler;
 import java.net.InetAddress;
@@ -35,9 +35,13 @@ public class Command extends BaseCommand {
      */
     public DataSource source;
     public Type type;
-    public int  thread;
-    public ClientParam param;
     public DataSchema schema = new DataSchema();
+
+    public class TableParam {
+        public boolean dump_select = getBool("table.dump_select");
+        public long read_empty = getLong("table.read_empty");
+    }
+    public TableParam table;
 
     /**
      * 内部状态
@@ -67,7 +71,7 @@ public class Command extends BaseCommand {
         addParser("table",  new ClientOption.Table());
         addParser("cache",  new MemCache.BaseOption());
 
-        validBind = "kafka, cassandra, hbase, redis";
+        validBind = "kafka, cassandra, hbase, redis, create";
     }
 
     protected void parseDynamic(String[] args) {
@@ -113,6 +117,10 @@ public class Command extends BaseCommand {
     }
 
     protected void validate() {
+        super.validate();
+
+        table = new TableParam();
+
         resolveParam();
 
         checkParam();
@@ -134,8 +142,6 @@ public class Command extends BaseCommand {
      * 解析参数的合法性
      */
     void resolveParam() {
-        ClientParam.command = this;
-        param = new ClientParam();
 
         parseAction();
 
@@ -191,7 +197,7 @@ public class Command extends BaseCommand {
     }
 
     public boolean emptyForbiden() {
-        if (MetricTracker.incData(0) >= param.read_empty) {
+        if (MetricTracker.incData(0) >= table.read_empty) {
             //System.exit(-1);
             log.info("read empty exceed: {}, thread exit", MetricTracker.getData(0));
             return true;
@@ -207,7 +213,7 @@ public class Command extends BaseCommand {
             param.fetch = Math.max(param.fetch, param.batch);
         }
 
-        if (thread > 1000) {
+        if (param.thread > 1000) {
             log.error("thread count should lower than 1000");
             System.exit(-1);
         }
@@ -265,12 +271,12 @@ public class Command extends BaseCommand {
         if (stepList.size() > 0) {
             type = stepList.get(0);
 
-            thread = getInt("work.thread");
+            param.thread = getInt("work.thread");
             if (type == Type.read && exist("gen.data_path")) {
                 int read_thread = getInt("work.read_thread");
                 if (read_thread != 0) {
-                    thread = read_thread;
-                    log.info("change next step. read step use thread {}", thread);
+                    param.thread = read_thread;
+                    log.info("change next step. read step use thread {}", param.thread);
                 }
             }
 
@@ -286,7 +292,7 @@ public class Command extends BaseCommand {
      * 重置消耗性 param
      */
     public void resetStep() {
-        param.read_empty = getLong("table.read_empty");
+        table.read_empty = getLong("table.read_empty");
     }
 
     private void parseHandler(String bind) {
@@ -413,7 +419,7 @@ public class Command extends BaseCommand {
          * use random read mode, will not ignore any empty updateFromCommandLine
          */
         if (type == Type.read && !exist("gen.data_path")) {
-            param.read_empty = 0;
+            table.read_empty = 0;
         }
     }
 }

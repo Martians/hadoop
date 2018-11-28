@@ -1,7 +1,7 @@
 package com.data.bind;
 
-import com.data.util.data.source.DataSource;
-import com.data.util.monitor.MetricTracker;
+import com.data.source.DataSource;
+import com.data.monitor.MetricTracker;
 import com.data.util.schema.DataSchema;
 import com.datastax.driver.core.*;
 import org.slf4j.Logger;

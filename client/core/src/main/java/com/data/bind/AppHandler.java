@@ -2,14 +2,12 @@ package com.data.bind;
 
 import com.data.base.Command;
 import com.data.base.Scheduler;
-import com.data.util.data.source.DataSource;
-import com.data.util.data.source.OutputSource;
+import com.data.source.DataSource;
+import com.data.source.OutputSource;
 import com.data.util.command.BaseOption;
-import com.data.util.monitor.MetricTracker;
+import com.data.monitor.MetricTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static com.data.util.Define.CSV_SEP;
 
 public class AppHandler {
 

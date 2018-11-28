@@ -1,4 +1,4 @@
-package com.data.util.data.source;
+package com.data.source;
 
 import com.data.util.common.Formatter;
 
@@ -21,8 +21,8 @@ public class ScanSource extends DataSource {
 
         /** 每个线程至少取1次, 最多 100次 */
         range = command.getLong("scan_range");
-        range = Long.max(command.thread * 1, range);
-        range = Long.min(command.thread * 1000, range);
+        range = Long.max(command.param.thread * 1, range);
+        range = Long.min(command.param.thread * 1000, range);
 
         piece = Math.abs((Long.MIN_VALUE / range - 1) * 2);
         middle = Long.MIN_VALUE + piece * (range / 2);

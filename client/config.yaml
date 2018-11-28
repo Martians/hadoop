@@ -1,6 +1,6 @@
 ---
 global:
-  bind: Kafka
+  bind: Redis
         # Kafka、Cassandra、HBase、MapR
   host: 192.168.0.81,192.168.0.82,192.168.0.83
   clear: false
@@ -62,7 +62,7 @@ kafka:
   clear: false
 
   table:
-    schema: integer(1000/100), string(10/1000000) {3}
+    schema: integer, string(10/1000000) {3}
     replica: 1
 
   work:
@@ -97,7 +97,7 @@ redis:
     read_empty: 0
 
   work:
-    type: write
+    type: generate
     total: 10000
     batch: 1
     thread: 3

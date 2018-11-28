@@ -1,4 +1,4 @@
-package com.data.util.monitor;
+package com.data.monitor;
 
 import com.data.base.Command;
 import com.data.util.common.Formatter;
@@ -38,7 +38,6 @@ public class MetricTracker extends Thread {
     int count;
     boolean threadFlag;
     Command command;
-
 
     static public void initialize(Command command) {
         tracker = new MetricTracker();

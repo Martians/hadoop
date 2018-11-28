@@ -1,7 +1,7 @@
 package com.data.bind;
 
 
-import com.data.util.data.source.DataSource;
+import com.data.source.DataSource;
 import io.lettuce.core.LettuceFutures;
 import io.lettuce.core.RedisFuture;
 import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands;

@@ -1,8 +1,8 @@
 package com.data.bind;
 
 import com.data.base.Command;
-import com.data.util.data.source.DataSource;
-import com.data.util.data.source.OutputSource;
+import com.data.source.DataSource;
+import com.data.source.OutputSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

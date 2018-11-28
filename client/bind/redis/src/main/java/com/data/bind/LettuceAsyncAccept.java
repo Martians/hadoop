@@ -1,8 +1,8 @@
 package com.data.bind;
 
 
-import com.data.util.data.source.DataSource;
-import com.data.util.monitor.MetricTracker;
+import com.data.source.DataSource;
+import com.data.monitor.MetricTracker;
 import io.lettuce.core.LettuceFutures;
 import io.lettuce.core.RedisFuture;
 import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands;
@@ -41,9 +41,9 @@ public class LettuceAsyncAccept extends LettuceSync {
 
         notify = command.getInt("async.notify");
         if (notify == 0) {
-            semaphore = new Semaphore(command.getInt("async.outstanding") * command.thread);
+            semaphore = new Semaphore(command.getInt("async.outstanding") * command.param.thread);
         } else {
-            total = command.getLong("async.outstanding") * command.thread;
+            total = command.getLong("async.outstanding") * command.param.thread;
         }
     }
 

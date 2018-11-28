@@ -1,6 +1,6 @@
 package com.data.util.schema;
 
-import com.data.util.data.generator.Random;
+import com.data.util.generator.Random;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

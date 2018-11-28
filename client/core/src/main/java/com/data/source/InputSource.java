@@ -1,21 +1,19 @@
-package com.data.util.data.source;
+package com.data.source;
 
 import com.data.base.Command;
-import com.data.util.data.generator.Random;
+import com.data.util.generator.Random;
 import com.data.util.schema.DataSchema;
 import com.data.util.test.ThreadTest;
 import com.data.util.common.Formatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.crypto.Data;
 import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.concurrent.*;
 
-import static com.data.util.Define.CSV_SEP;
 import static com.data.util.test.ThreadTest.debugThread;
 
 public class InputSource extends DataSource implements Runnable {
@@ -33,7 +31,7 @@ public class InputSource extends DataSource implements Runnable {
         cache.command = command;
 
         cache = new MemCache();
-        cache.initialize(command.thread);
+        cache.initialize(command.param.thread);
 
         loadFiles();
 

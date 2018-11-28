@@ -1,8 +1,8 @@
 package com.data.base;
 
 import com.data.bind.AppHandler;
-import com.data.util.data.source.DataSource;
-import com.data.util.data.source.OutputSource;
+import com.data.source.DataSource;
+import com.data.source.OutputSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +29,7 @@ public class IOPSThread extends Thread {
     }
 
     void initialize() {
-        if (command.thread >= 10) {
+        if (command.param.thread >= 10) {
             setName(String.format("iops-%02d", index));
         } else {
             setName(String.format("iops-%d", index));

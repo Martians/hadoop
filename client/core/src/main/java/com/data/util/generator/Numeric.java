@@ -1,5 +1,4 @@
-package com.data.util.data.generator;
-
+package com.data.util.generator;
 
 import com.data.util.schema.DataSchema;
 

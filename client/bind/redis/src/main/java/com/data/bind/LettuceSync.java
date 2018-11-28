@@ -2,7 +2,7 @@ package com.data.bind;
 
 
 import com.data.base.IOPSThread;
-import com.data.util.data.source.DataSource;
+import com.data.source.DataSource;
 import io.lettuce.core.KeyValue;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.cluster.RedisClusterClient;
@@ -12,7 +12,6 @@ import io.lettuce.core.cluster.api.sync.RedisAdvancedClusterCommands;
 import io.lettuce.core.resource.ClientResources;
 import io.lettuce.core.resource.DefaultClientResources;
 import io.lettuce.core.support.ConnectionPoolSupport;
-import org.apache.commons.pool2.impl.DefaultPooledObjectInfo;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
@@ -94,7 +93,7 @@ public class LettuceSync extends RedisBase {
                 connList = new ArrayList<>();
                 asyncList = new ArrayList<>();
 
-                int count = Math.min(command.thread, command.getInt("async.pool"));
+                int count = Math.min(command.param.thread, command.getInt("async.pool"));
                 pool.setMaxTotal(count);
                 pool.setMinIdle(count);
 

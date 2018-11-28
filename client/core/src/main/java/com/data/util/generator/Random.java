@@ -1,6 +1,6 @@
-package com.data.util.data.generator;
+package com.data.util.generator;
 
-import com.data.base.Command;
+import com.data.util.command.BaseCommand;
 import com.data.util.schema.DataSchema;
 import com.data.util.test.ThreadTest;
 import org.slf4j.Logger;
@@ -25,8 +25,8 @@ public class Random {
     List<Object> objectList;
     int objectSize;
 
-    protected Command command;
-    public void set(Command command) {
+    protected BaseCommand command;
+    public void set(BaseCommand command) {
         this.command = command;
     }
 
@@ -134,7 +134,7 @@ public class Random {
         /**
          * 此方式速度最快，但是无法设置 seed
          */
-        if (command.param.seed == 0) {
+        if (recordSeed == 0) {
             return ThreadLocalRandom.current();
 
         } else {

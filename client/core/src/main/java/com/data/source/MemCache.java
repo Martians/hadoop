@@ -1,6 +1,6 @@
-package com.data.util.data.source;
+package com.data.source;
 
-import com.data.base.Command;
+import com.data.util.command.BaseCommand;
 import com.data.util.test.ThreadTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MemCache {
     static final Logger log = LoggerFactory.getLogger(MemCache.class);
 
-    public static Command command;
+    public static BaseCommand command;
 
     public MemCache() {}
 
@@ -242,7 +242,7 @@ public class MemCache {
     }
 
     public static void main(String[] args) {
-        Command command = new Command("".split(" "), true);
+        BaseCommand command = new BaseCommand("".split(" "));
         MemCache.command = command;
 
         MemCache cache = new MemCache();

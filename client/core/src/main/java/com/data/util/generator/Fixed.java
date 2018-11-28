@@ -1,14 +1,12 @@
-package com.data.util.data.generator;
-import com.data.base.Command;
+package com.data.util.generator;
+import com.data.util.command.BaseCommand;
 import com.data.util.schema.DataSchema;
-
-import javax.xml.crypto.Data;
 
 public class Fixed extends Random {
 
     private char[] table_array = null;
 
-    public void set(Command command) {
+    public void set(BaseCommand command) {
         super.set(command);
     }
 

@@ -1,4 +1,4 @@
-package com.data.util.data.source;
+package com.data.source;
 
 import com.data.base.Command;
 import com.data.util.common.Formatter;
@@ -73,7 +73,7 @@ public class DataSource {
     }
 
     public boolean ending() {
-        final long remain = command.thread * command.param.batch;
+        final long remain = command.param.thread * command.param.batch;
         return total.get() <= remain;
     }
     public long total() { return total.get(); }

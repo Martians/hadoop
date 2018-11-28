@@ -1,9 +1,7 @@
-package com.data.util.data.generator;
+package com.data.util.generator;
 
-import com.data.base.Command;
-import com.data.base.IOPSThread;
+import com.data.util.command.BaseCommand;
 import com.data.util.schema.DataSchema;
-import com.data.util.sys.Common;
 
 import java.nio.CharBuffer;
 
@@ -46,7 +44,7 @@ public class Sequence extends Random {
         SeqBase seq = local.get();
         if (seq == null) {
             long total = Math.min(command.param.total, max - min + 1);
-            long piece = total / command.thread;
+            long piece = total / command.param.thread;
 
             /**
              * 最后一个piece确保执行到 max
@@ -71,8 +69,8 @@ public class Sequence extends Random {
 
     public static void main(String[] args) {
         String arglist = String.format("-thread 1 -total 100000");
-        Command command = new Command(arglist.split(" "), true);
-        command.thread = 1;
+        BaseCommand command = new BaseCommand(arglist.split(" "));
+        command.param.thread = 1;
 
         DataSchema schema = new DataSchema();
         DataSchema.Item item = schema.new Item();

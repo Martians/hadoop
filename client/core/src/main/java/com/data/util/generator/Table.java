@@ -1,6 +1,6 @@
-package com.data.util.data.generator;
+package com.data.util.generator;
 
-import com.data.base.Command;
+import com.data.util.command.BaseCommand;
 import com.data.util.common.Formatter;
 import com.data.util.schema.DataSchema;
 import com.data.util.test.ThreadTest;
@@ -40,7 +40,7 @@ public class Table extends Random {
     public int waterLevel = 32;
     int threadLen;
 
-    public void set(Command command) {
+    public void set(BaseCommand command) {
         super.set(command);
 
         table_array = new TableArray();
@@ -114,7 +114,7 @@ public class Table extends Random {
      * java -classpath client-0.0.1-SNAPSHOT.jar com.data.util.source.Table 4096
      */
     public static void main(String[] args) {
-        Command command = new Command("".split(""), true);
+        BaseCommand command = new BaseCommand("".split(""));
         Set<String> set = new ConcurrentSet<>();
         AtomicLong conflict = new AtomicLong(0);
 
