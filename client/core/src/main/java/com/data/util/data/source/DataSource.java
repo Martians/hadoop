@@ -20,7 +20,6 @@ public class DataSource {
     DataSchema schema;
 
     private AtomicLong total = new AtomicLong(0);
-    private boolean sequence = false;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     public void set(Command command) {
@@ -38,11 +37,6 @@ public class DataSource {
             item.gen.set(command);
             item.gen.update(item);
         }
-
-        //test
-        //if (command.get("gen.key_type").equals("seq")) {
-        //    sequence = true;
-        //}
     }
 
     public void threadPrepare(int index) {
@@ -57,12 +51,6 @@ public class DataSource {
      * getInput task range
      */
     public int nextWork(int tryCount) {
-        /**
-         * when use sequence, stop by itself
-         */
-        if (sequence) {
-            return tryCount;
-        }
 
         long remain = total.addAndGet(-tryCount);
         if (remain < 0) {

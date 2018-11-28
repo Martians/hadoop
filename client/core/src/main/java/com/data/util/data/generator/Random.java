@@ -121,12 +121,12 @@ public class Random {
         switch (item.type) {
             case string: {
                 object = getString(item.len);
-                item.curr = item.len + 4;
+                item.curr = DataSchema.stringSize((item.len));
             } break;
 
             case integer: {
                 object = getLong();
-                item.curr = 4;
+                item.curr = DataSchema.intSize();
             } break;
 
             default:

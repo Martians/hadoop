@@ -62,12 +62,12 @@ kafka:
   clear: false
 
   table:
-    schema: integer(1000), string(10)@table {10}
+    schema: integer(1000)@seq, string(10)@uuid {10}
     replica: 1
 
   work:
-    type: generate
-    total: 1000
+    type: write
+    total: 100000
     thread: 1
       # write、read; generate、load; scan
 

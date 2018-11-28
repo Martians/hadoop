@@ -167,9 +167,6 @@ public class Command extends BaseCommand {
 
     void parseSchema() {
         schema.initialize(get("table.schema"));
-
-        //test
-        //schema.updateKeySchema(get("gen.key_type"));
     }
 
     void checkParam() {
@@ -214,15 +211,7 @@ public class Command extends BaseCommand {
             log.error("thread count should lower than 1000");
             System.exit(-1);
         }
-
-        //test
-        //if (schema.list.get(0).type == DataSchema.Type.string) {
-        //    if (get("gen.key_type").equals("seq")) {
-        //        log.info("not support sequence string now, change sequence to false");
-        //        System.exit(-1);
-        //    }
-        //}
-
+        
         if (getBool("table.keyspace_auto")) {
             String host = getHost();
             set("table.keyspace", host);

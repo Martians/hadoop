@@ -44,6 +44,26 @@ public class DataSchema {
         integer,
     };
 
+    static public int actualSize(String str) {
+        return str.length() + 4;
+    }
+
+    static public int actualSize(int data) {
+        return 4;
+    }
+
+    static public int actualSize(long data) {
+        return 8;
+    }
+
+    static public int stringSize(int len) {
+        return len + 4;
+    }
+
+    static public int intSize() {
+        return 4;
+    }
+
     /**
      * schema item
      */

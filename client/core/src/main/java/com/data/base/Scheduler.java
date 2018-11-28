@@ -100,7 +100,7 @@ public class Scheduler {
             }
 
             if (output != null) {
-                output.join();
+                output.waitThread();
             }
 
         } catch (InterruptedException e) {

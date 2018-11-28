@@ -8,6 +8,7 @@ import com.data.util.common.Formatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.crypto.Data;
 import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -61,7 +62,6 @@ public class InputSource extends DataSource implements Runnable {
 
         int size = 0;
         int nums = 0;
-        int index = 0;
 
         String[] split = line.split(", ");
         Object[] array = null;
@@ -72,17 +72,19 @@ public class InputSource extends DataSource implements Runnable {
             System.exit(-1);
         }
 
-        //if (command.type == BaseCommand.Type.write) {
-        array = new Object[command.schema.list.size()];
-        System.arraycopy(split, 0, array, 0, command.schema.list.size());
+        List<DataSchema.Item> list = command.schema.list;
+        array = new Object[list.size()];
+        System.arraycopy(split, 0, array, 0, list.size());
 
-        for (DataSchema.Item item : command.schema.list) {
-            //test
-            //if (item.type == integer) {
-            //    array[index] = Long.parseLong(split[index]);
-            //}
-            //size += item.actual();
-            //index++;
+        for (int i = 0; i < list.size(); i++) {
+            DataSchema.Item item = list.get(i);
+            if (item.type == DataSchema.Type.integer) {
+                array[i] = Long.parseLong(split[i]);
+                size += DataSchema.actualSize(0);
+
+            } else {
+                size += DataSchema.actualSize(split[i]);
+            }
         }
 
         //} else {

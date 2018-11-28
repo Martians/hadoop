@@ -11,7 +11,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 
-public class OutputSource extends Thread {
+public class OutputSource implements Runnable {
 
     static final Logger log = LoggerFactory.getLogger(OutputSource.class);
     Thread   thread;
@@ -38,11 +38,10 @@ public class OutputSource extends Thread {
 
         thread = new Thread(this, "output stream");
         thread.start();
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+    }
+
+    public void waitThread() throws InterruptedException {
+        thread.join();
     }
 
     protected void clearFiles() {
@@ -188,7 +187,7 @@ public class OutputSource extends Thread {
             for (Output out : list) {
                 try {
                     out.writer.close();
-                    log.info("--------------");
+
                 } catch (IOException e) {
                     System.out.println("close file Error: " + e);
                     System.exit(-1);
@@ -250,7 +249,7 @@ public class OutputSource extends Thread {
         //debugThread();
 
         try {
-            output.join();
+            output.waitThread();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

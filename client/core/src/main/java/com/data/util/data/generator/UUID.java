@@ -5,6 +5,7 @@ public class UUID extends Random {
 
     public void set(DataSchema.Item item) {
         check("string", item);
+        item.len = 36;
     }
 
     @Override

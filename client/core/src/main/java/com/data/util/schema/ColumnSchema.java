@@ -145,20 +145,6 @@ public class ColumnSchema extends DataSchema {
         return list;
     }
 
-    public void updateKeySchema(String type) {
-        Item item = list.get(0);
-
-		//test
-        //if (type.equals("uuid")) {
-        //    item.type = Type.string;
-        //    item.size = 36;
-        //
-        //} else if (type.equals("seq")) {
-        //    item.type = Type.integer;
-        //    item.size = 8;
-        //}
-    }
-
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     void fixPrimaryKey() {
         primaryKey = new ArrayList<Integer>();
