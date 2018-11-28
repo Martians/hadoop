@@ -99,6 +99,7 @@ public class DataSchema {
 
             one.min =  min;
             one.max = max;
+            one.count = count;
 
             one.len = len;
             one.gen = gen;
@@ -111,17 +112,14 @@ public class DataSchema {
             StringBuilder sb = new StringBuilder();
             sb.append(type);
 
-            if (len != 0) {
-                sb.append("(" + len + ")");
-
-            } else if (max != 0) {
+            if (max != 0) {
                 sb.append("(");
                 if (min != 0) {
                     sb.append(min + ", ");
                 }
                 sb.append(max);
                 if (count != 0) {
-                    sb.append(count);
+                    sb.append("/" + count);
                 }
                 sb.append(")");
             }

@@ -6,6 +6,8 @@ import com.data.util.test.ThreadTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -20,7 +22,8 @@ public class Random {
     long threadIndex = 0;
     long recordSeed = 0;
 
-    long setCount = 0;
+    List<Object> objectList;
+    int objectSize;
 
     protected Command command;
     public void set(Command command) {
@@ -72,6 +75,12 @@ public class Random {
      */
     public void threadPrepare(int index) {
         threadIndex = index;
+
+        updateSeed(index);
+    }
+
+    public void updateSeed(int index) {
+
         long seed = command.getLong("gen.seed");
 
         /**
@@ -94,8 +103,31 @@ public class Random {
         }
     }
 
-    public void update(DataSchema.Item item) {
-        setCount = item.count;
+    public void prepare(DataSchema.Item item) {
+        if (item.count != 0) {
+            if (objectList == null) {
+                List<Object> list = new ArrayList<>();
+                updateSeed(item.index * 101);
+                /**
+                 * 后续仍然会在 threadPrepare 根据 thread index 设置 seed
+                 */
+                recordSeed = 0;
+
+                log.info("start prepare data set, for schema: {}", item);
+                for (int i = 0; i < item.count; i++) {
+                    list.add(get(item));
+
+                    if (i % 1000000 == 0 && i > 0) {
+                        log.info("\t  ---- prepare: {} w", i/10000);
+                    }
+                }
+                objectList = list;
+                objectSize = item.curr;
+
+            } else {
+                log.debug("already set, maybe dump item");
+            }
+        }
     }
 
     protected java.util.Random getRandom() {
@@ -117,6 +149,10 @@ public class Random {
 
     final public Object get(DataSchema.Item item) {
         Object object = null;
+
+        if (objectList != null) {
+            return objectList.get(getIndex(objectList.size()));
+        }
 
         switch (item.type) {
             case string: {

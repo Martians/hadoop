@@ -211,7 +211,7 @@ public class Command extends BaseCommand {
             log.error("thread count should lower than 1000");
             System.exit(-1);
         }
-        
+
         if (getBool("table.keyspace_auto")) {
             String host = getHost();
             set("table.keyspace", host);

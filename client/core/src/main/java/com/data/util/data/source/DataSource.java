@@ -1,7 +1,6 @@
 package com.data.util.data.source;
 
 import com.data.base.Command;
-import com.data.util.data.generator.*;
 import com.data.util.common.Formatter;
 import com.data.util.schema.DataSchema;
 import org.slf4j.Logger;
@@ -35,7 +34,7 @@ public class DataSource {
          */
         for (DataSchema.Item item : command.schema.list) {
             item.gen.set(command);
-            item.gen.update(item);
+            item.gen.prepare(item);
         }
     }
 
