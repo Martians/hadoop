@@ -77,7 +77,7 @@ public class MemCache {
             long time = System.nanoTime();
             if (time - last >= dump_time) {
                 last = time;
-                log.info("cache status: data list {}, current chunk {} ",
+                log.info("cache status: data handlelist {}, current chunk {} ",
                         dataList.size(), current.size());
             }
         }
@@ -105,7 +105,7 @@ public class MemCache {
         if (current != null) {
             try {
                 dataList.put(current);
-                log.debug("moveInput data list: {}", dataList.size());
+                log.debug("moveInput data handlelist: {}", dataList.size());
 
             } catch (InterruptedException e) {
                 log.warn("move input err, {}", e);
@@ -214,7 +214,7 @@ public class MemCache {
                 if (list.size() > 0) {
                     dataList.put(list);
                 }
-                log.debug("move output, data list: {}", dataList.size());
+                log.debug("move output, data handlelist: {}", dataList.size());
 
             } catch (InterruptedException e) {
                 log.warn("move output err, {}", e);

@@ -190,8 +190,8 @@ public class BaseOption {
         if (current.length() > 0) {
             current = current + ".";
         }
-        for (SingleOption opt : optionList) {
 
+        for (SingleOption opt : optionList) {
             /**
              * 在命令行中，传入了该命令
              */

@@ -14,6 +14,15 @@ import java.util.concurrent.atomic.AtomicLong;
 public class Table extends Random {
     static final Logger log = LoggerFactory.getLogger(Table.class);
 
+    public void set(BaseCommand command) {
+        super.set(command);
+
+        table_array = new TableArray();
+        table_array.initialize();
+
+        /** 每个线程池的缓冲数据大小 */
+        threadLocal = 256 * 1024;
+    }
 
     class TableArray {
         char[] data = new char[TABLE_SIZE];
@@ -28,8 +37,9 @@ public class Table extends Random {
             }
         }
     }
-    
     static TableArray table_array;
+
+    int threadLocal;
     static final ThreadLocal<char[]> local = new ThreadLocal<>();
 
     final int UNIT_LENGTH = 1 * 1024;
@@ -37,18 +47,10 @@ public class Table extends Random {
     final int TABLE_SIZE  = UNIT_LENGTH * UNIT_COUNTS;
     final int RANDOME_NUM = 4;
 
+    /**
+     * 超过此值，才会使用table方式
+     */
     public int waterLevel = 32;
-    int threadLen;
-
-    public void set(BaseCommand command) {
-        super.set(command);
-
-        table_array = new TableArray();
-        table_array.initialize();
-
-        /** 每个线程池的缓冲数据大小 */
-        threadLen = 256 * 1024;
-    }
 
     public void set(DataSchema.Item item) {
         check("string", item);
@@ -58,10 +60,10 @@ public class Table extends Random {
         char[] array = local.get();
 
         if (array == null) {
-            array = new char[threadLen];
+            array = new char[threadLocal];
             local.set(array);
 
-            for (int i = 0; i < threadLen / UNIT_LENGTH; i++) {
+            for (int i = 0; i < threadLocal / UNIT_LENGTH; i++) {
                 System.arraycopy(table_array.data, getIndex(TABLE_SIZE - UNIT_LENGTH),
                         array, i * UNIT_LENGTH,
                         UNIT_LENGTH);
@@ -88,11 +90,10 @@ public class Table extends Random {
         }
 
         char[] array = threadArray();
-
         /**
          * 每次最多复制一个 UNIT_LENGTH
          */
-        int pos = getIndex(threadLen - length);
+        int pos = getIndex(threadLocal - length);
         System.arraycopy(table_array.data, getIndex(TABLE_SIZE - UNIT_LENGTH),
                 array, pos,
                 length < UNIT_LENGTH ? length : UNIT_LENGTH);

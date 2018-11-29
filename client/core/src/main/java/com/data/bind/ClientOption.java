@@ -47,10 +47,6 @@ public class ClientOption {
             addOption("read_empty",  "ignore empty updateFromCommandLine", 1000);
             addOption("dump_select",  "dump select message", false);
 
-            /**
-             * schema
-             */
-            addOption("schema", "table schema", "integer, String(4)[10]");
             //addOption("schema", "table schema", "integer, String(4)[10]<(9)>");
             //addOption("schema", "table schema", "integer, String(4)[10]<5-9>");
             //addOption("schema", "table schema", "integer, String(4)[10]<(1, 3), 5-9>");

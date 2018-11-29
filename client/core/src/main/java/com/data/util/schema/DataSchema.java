@@ -39,6 +39,7 @@ import java.util.regex.Pattern;
  */
 public class DataSchema {
     static final Logger log = LoggerFactory.getLogger(DataSchema.class);
+
     BaseCommand command;
 
     public enum Type {
@@ -152,6 +153,11 @@ public class DataSchema {
         } else {
             item.set(random);
         }
+    }
+
+    public void initialize(BaseCommand command, String schemaString) {
+        set(command);
+        initialize(schemaString);
     }
 
     public void initialize(String schemaString) {

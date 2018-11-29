@@ -1,6 +1,8 @@
 package com.data.util.source;
 
+import com.data.util.command.BaseCommand;
 import com.data.util.common.Formatter;
+import com.data.util.schema.DataSchema;
 
 import java.util.concurrent.ConcurrentLinkedDeque;
 
@@ -16,8 +18,8 @@ public class ScanSource extends DataSource {
     static public long piece;
 
     @Override
-    public void initialize() {
-        super.initialize();
+    public void initialize(BaseCommand command, DataSchema schema, String path) {
+        super.initialize(command, schema, path);
 
         /** 每个线程至少取1次, 最多 100次 */
         range = command.getLong("scan_range");

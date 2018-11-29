@@ -4,6 +4,7 @@ import com.data.bind.ClientOption;
 import com.data.util.command.BaseCommand;
 import com.data.util.command.BaseOption;
 import com.data.util.common.Formatter;
+import com.data.util.generator.Random;
 import com.data.util.schema.DataSchema;
 import com.data.util.source.DataSource;
 import com.data.util.source.InputSource;
@@ -13,8 +14,8 @@ import com.data.util.monitor.MetricTracker;
 import com.data.util.sys.ExtClassPathLoader;
 import com.data.bind.AppHandler;
 import java.net.InetAddress;
-
 import java.util.*;
+
 
 import static com.data.base.Command.Type.read;
 import static com.data.base.Command.Type.scan;
@@ -73,7 +74,9 @@ public class Command extends BaseCommand {
         addParser("",       new ClientOption.Global());
         addParser("work",   new ClientOption.Workload());
         addParser("table",  new ClientOption.Table());
-        addParser("cache",  new MemCache.BaseOption());
+
+        DataSource.regist(this);
+        Random.regist(this);
 
         validBind = "kafka, cassandra, hbase, redis, create";
     }
@@ -418,11 +421,9 @@ public class Command extends BaseCommand {
         }
 
         if (source instanceof InputSource) {
-            ((InputSource) source).setPath(dataPath());
         }
 
-        source.set(this, schema);
-        source.initialize();
+        source.initialize(this, schema, dataPath());
         return source;
     }
 

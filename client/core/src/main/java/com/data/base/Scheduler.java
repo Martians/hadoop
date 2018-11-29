@@ -32,8 +32,7 @@ public class Scheduler {
                 || command.type == Command.Type.scan && command.exist("gen.data_path"))
         {
             output = new OutputSource();
-            output.setPath(command.dataPath());
-            output.initialize(command);
+            output.initialize(command, command.dataPath());
 
         } else {
             output = null;

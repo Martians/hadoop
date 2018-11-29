@@ -2,6 +2,7 @@ package com.data.util.source;
 
 import com.data.util.command.BaseCommand;
 import com.data.util.common.Formatter;
+import com.data.util.disk.Disk;
 import com.data.util.generator.Random;
 import com.data.util.schema.DataSchema;
 import com.data.util.test.ThreadTest;
@@ -18,18 +19,21 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 import static com.data.util.test.ThreadTest.debugThread;
 
+/**
+ * 不需要使用cache的notify功能，获取数据时访问到null，即表明数据已经取完
+ */
 public class InputSource extends DataSource implements Runnable {
     static final Logger log = LoggerFactory.getLogger(InputSource.class);
 
-    Thread  thread;
+    protected Long fileTotalSize = 0L;
+    protected List<Path> pathList = new ArrayList<>();
+
     MemCache cache;
-    Long total_size = 0L;
-    String dataPath = "";
-    List<Path> pathList = new ArrayList<>();
+    Thread  thread;
 
     @Override
-    public void initialize() {
-        super.initialize();
+    public void initialize(BaseCommand command, DataSchema schema, String path) {
+        super.initialize(command, schema, path);
 
         cache.command = command;
 
@@ -38,12 +42,8 @@ public class InputSource extends DataSource implements Runnable {
 
         loadFiles();
 
-        thread = new Thread(this, "InputGen");
+        thread = new Thread(this, "input source");
         thread.start();
-    }
-
-    public void setPath(String path) {
-        dataPath = path;
     }
 
     @Override
@@ -52,23 +52,17 @@ public class InputSource extends DataSource implements Runnable {
     }
 
     @Override
-    public String dumpLoad() {
-        return String.format("workload: path [%s], file %d",
-                dataPath, pathList.size());
-    }
-
-    @Override
     public Wrap next() {
         String line = cache.getInput();
         if (line == null) {
-            log.debug("---- getInput next but empty");
+            log.debug("---- input source next, but already empty");
             return null;
         }
 
         int size = 0;
         int nums = 0;
 
-        String[] split = line.split(", ");
+        String[] split = line.split("[, ]");
         Object[] array = null;
 
         if (schema.list.size() != split.length) {
@@ -96,7 +90,7 @@ public class InputSource extends DataSource implements Runnable {
         //    array = new Object[schema.primaryKey.size()];
         //
         //    for (Integer p : schema.primaryKey) {
-        //        DataSchema.Item item = schema.list.get(p);
+        //        DataSchema.Item item = schema.handlelist.get(p);
         //        if (item.type == integer) {
         //            split[index] = Long.parseLong((String)split[p]);
         //        }
@@ -113,27 +107,7 @@ public class InputSource extends DataSource implements Runnable {
             System.exit(-1);
         }
 
-        class MyFileVisitor extends SimpleFileVisitor<Path> {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                if (file.toString().endsWith("csv")) {
-                    pathList.add(file);
-                    log.debug("get file: {}", file);
-                }
-                return FileVisitResult.CONTINUE;
-            }
-        }
-
-        try {
-            Path path = Paths.get(dataPath);
-            Files.walkFileTree(path, new MyFileVisitor());
-
-        } catch(IOException e) {
-            log.info("I/O Error, current {}, given {} ",
-                    System.getProperty("user.dir"),
-                    dataPath, e);
-            System.exit(-1);
-        }
+        pathList = Disk.traversePath(dataPath, "csv");
         log.info("try to load, file range: {}", pathList.size());
     }
 
@@ -145,12 +119,12 @@ public class InputSource extends DataSource implements Runnable {
             String line;
 
             try (BufferedReader file =
-                         new BufferedReader(new FileReader(p.toFile())))
+                    new BufferedReader(new FileReader(p.toFile())))
             {
                 while ((line = file.readLine()) != null) {
                     cache.addInput(line);
                 }
-                total_size += p.toFile().length();
+                fileTotalSize += p.toFile().length();
 
             } catch (IOException e) {
                 System.out.println("I/O Error: " + e);
@@ -160,34 +134,39 @@ public class InputSource extends DataSource implements Runnable {
         cache.completeInput();
 
         log.info("load file complete, total line: [{}], size: [{}]",
-                Formatter.formatIOPS(cache.total), Formatter.formatSize(total_size));
+                Formatter.formatIOPS(cache.total), Formatter.formatSize(fileTotalSize));
     }
 
+    @Override
+    public String dumpLoad() {
+        return String.format("workload: path [%s], file %d", dataPath, pathList.size());
+    }
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static void main(String[] args) {
         int  thnum = 10;
         long total = 100000L;
-
         int  fildNum = 10;
+
         /**
          * command 中设置的 thread 个数，必须大于 thnum
          */
-        String arglist = String.format("-table_schema string(4),string(4){%d} -thread %d", fildNum, thnum);
-
         BaseCommand command = new BaseCommand();
+        DataSource.regist(command);
+
+        /**
+         * -prefix 选项，只能从配置文件读取，从命令行读取的无效
+         */
+        String arglist = String.format("-schema string(4),string(4){%d} -thread %d", fildNum, thnum);
         command.set("gen.data_path", "test");
-        //command.set("dump", "true");
-        command.addParser("cache",  new MemCache.BaseOption());
-        //command.addParser("table",  new ClientOption.Table());
         command.initialize(arglist.split(" "));
 
         try {
-            Files.createDirectories(Paths.get("test"));
+            Files.createDirectories(Paths.get(command.get("gen.data_path")));
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Path p = Paths.get("test/file.csv");
+        Path p = Paths.get( command.get("gen.data_path") + "/file.csv");
 
         /**
          * 生成测试文件
@@ -214,14 +193,10 @@ public class InputSource extends DataSource implements Runnable {
         log.info("write data completed");
 
         DataSchema schema = new DataSchema();
-        schema.set(command);
-        schema.initialize(command.get("table.schema"));
+        schema.initialize(command, command.get("table.schema"));
 
         InputSource input = new InputSource();
-        input.set(command, schema);
-
-        input.setPath("test");
-        input.initialize();
+        input.initialize(command, schema, command.get("gen.data_path"));
 
         Set<Long> set = new ConcurrentSkipListSet<>();
 
@@ -243,7 +218,7 @@ public class InputSource extends DataSource implements Runnable {
                     if ((wrap = gen.next()) == null) {
                         break;
                     }
-                    set.add((Long)wrap.array[0]);
+                    set.add(Long.valueOf((String)wrap.array[0]));
                     count++;
                 }
             }
@@ -265,7 +240,7 @@ public class InputSource extends DataSource implements Runnable {
             log.info("thread {}, range: {} ", t.index, t.count);
         }
 
-        debugThread();
+        //debugThread();
         log.info("size: {}", set.size());
     }
 }

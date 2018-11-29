@@ -16,24 +16,30 @@ public class DataSource {
     static final Logger log = LoggerFactory.getLogger(DataSource.class);
 
     protected BaseCommand command;
-    DataSchema schema;
+    protected DataSchema schema;
+    protected String dataPath = "";
 
+    /**
+     * 用于给各个线程分配刻可执行的工作
+     */
     private AtomicLong total = new AtomicLong(0);
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    public void set(BaseCommand command, DataSchema schema) {
-        this.command = command;
-        this.schema = schema;
+    public static void regist(BaseCommand command) {
+        command.addParser("cache",  new MemCache.BaseOption());
     }
 
-    public void initialize() {
+    public void initialize(BaseCommand command, DataSchema schema, String path) {
+        this.command = command;
+        this.schema = schema;
+        dataPath = path;
+
         total.getAndSet(command.param.total);
 
         /**
          * 初始化相关的 Generator
          */
         for (DataSchema.Item item : schema.list) {
-            item.gen.set(command);
             item.gen.prepare(item);
         }
     }
@@ -72,6 +78,9 @@ public class DataSource {
         }
     }
 
+    /**
+     * 用于判断任务是否快结束了
+     */
     public boolean ending() {
         final long remain = command.param.thread * command.param.batch;
         return total.get() <= remain;
@@ -126,7 +135,7 @@ public class DataSource {
     //    }
     //
     //    for (Integer p : schema.primaryKey) {
-    //        DataSchema.Item s = schema.list.get(p);
+    //        DataSchema.Item s = schema.handlelist.get(p);
     //
     //        if (array[index] == null) {
     //            switch (s.type) {
@@ -147,8 +156,4 @@ public class DataSource {
     //    }
     //    return new Wrap(array, size);
     //}
-
-
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 }

@@ -6,9 +6,18 @@ import java.util.regex.Pattern;
 
 public class Formatter {
 
+    public static boolean isNumeric(String str) {
+        for (int i = 0; i < str.length(); i++) {
+            if (!Character.isDigit(str.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public static Long parseSize(String value) {
 
-        String primaryPartten = "<(\\(.+\\))?(.+)>";
+        //String primaryPartten = "<(\\(.+\\))?(.+)>";
         Pattern pattern = Pattern.compile("([-0-9]*)(.*)");
         Matcher match = pattern.matcher(value);
         long unit = 1;
@@ -24,6 +33,10 @@ public class Formatter {
                     case "k": unit = 1024; break;
                     case "m": unit = 1024 * 1024; break;
                     case "g": unit = 1024 * 1024 * 1024; break;
+
+                    case "w": unit = 10000; break;
+                    case "y": unit = 100000000; break;
+
                     default:  unit = 1; break;
                 }
             }

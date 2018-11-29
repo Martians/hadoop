@@ -16,36 +16,29 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class Random {
     static final Logger log = LoggerFactory.getLogger(Random.class);
-
     static final String KeyString = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
     static final ThreadLocal<java.util.Random> rand = new ThreadLocal<>();
-    public boolean valid = true;
-
-    long threadIndex = 0;
-    long recordSeed = 0;
-
-    List<Object> objectList;
-    int objectSize;
-
-    protected BaseCommand command;
-    public void set(BaseCommand command) {
-        this.command = command;
-    }
 
     /**
-     *
-     * 注册时进行检查
+     * 标记为invalid时，表明 generator 是需要重置的，不需要进行检查了
      */
-    public void set(DataSchema.Item item) {
-        check("integer, string", item);
-    }
+    protected BaseCommand command;
+    public boolean valid = true;
+    long threadIndex = 0;
 
-    protected void check(String support, DataSchema.Item item) {
-        if (support.indexOf(item.type.toString()) == -1) {
-            log.info("generator [{}] not support schema type [{}], item: {}", this, item.type, item);
-            System.exit(-1);
-        }
+    /**
+     * 多个schema共用generator时，防止多次设置seed
+     */
+    long recordSeed = 0;
+
+    /**
+     * 缓存object作为数据集合，后续不需要再重新生成
+     */
+    List<Object> objectList;
+
+    public static void regist(BaseCommand command) {
+        command.addParser("gen", new Option());
     }
 
     public static class Option extends BaseOption {
@@ -55,6 +48,7 @@ public class Random {
             addOption("data_path", "data file path; if setted, output[generate、scan], input[load、read]", "");
             addOption("output.file_count", "min output file count", 1);
             addOption("output.file_size", "output file size (M)", "-1");
+            addOption("output.file_rand", "random write to multi file", true);
 
             addOption("integer.gen",  "integer generator","numeric");
             addOption("integer.min",  "integer default min value", 0);
@@ -111,21 +105,37 @@ public class Random {
         return null;
     }
 
+    public void set(BaseCommand command) {
+        this.command = command;
+    }
+
+    /**
+     *
+     * item 注册时进行检查，从item获取信息完善自身配置
+     */
+    public void set(DataSchema.Item item) {
+        check("integer, string", item);
+    }
+    protected void check(String support, DataSchema.Item item) {
+        if (support.indexOf(item.type.toString()) == -1) {
+            log.info("generator [{}] not support schema type [{}], item: {}", this, item.type, item);
+            System.exit(-1);
+        }
+    }
+
     /**
      * every thread updateFromCommandLine different seed
      */
     public void threadPrepare(int index) {
         threadIndex = index;
-
         updateSeed(index);
     }
 
     public void updateSeed(int index) {
-
         long seed = command.getLong("gen.seed");
 
         /**
-         * seed 确保只设置一次
+         * recordSeed 确保只设置一次
          */
         if (seed != 0 && recordSeed == 0) {
             recordSeed = seed + index;
@@ -133,9 +143,13 @@ public class Random {
         }
     }
 
+    /**
+     * 使用之前，将需要耗时的大量初始化放在这里
+     */
     public void prepare(DataSchema.Item item) {
         if (item.count != 0) {
             if (objectList == null) {
+
                 List<Object> list = new ArrayList<>();
                 updateSeed(item.index * 101);
                 /**
@@ -152,15 +166,23 @@ public class Random {
                     }
                 }
                 objectList = list;
-                objectSize = item.curr;
 
             } else {
                 log.debug("already set, maybe dump item");
             }
         }
     }
+    /**
+     * 每次访问已经cache的object，可以进行一些更新
+     */
     protected void cacheUpdate(Object object) {}
 
+    public String toString() {
+        return this.getClass().getSimpleName().toLowerCase();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     protected java.util.Random getRandom() {
         /**
          * 此方式速度最快，但是无法设置 seed
@@ -211,9 +233,8 @@ public class Random {
         return object;
     }
 
-
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     public String getString(int length) {
         final int size = KeyString.length();
         java.util.Random random = getRandom();
@@ -246,10 +267,6 @@ public class Random {
 
     public int getIndex(int min, int max) {
         return Math.abs(getRandom().nextInt() % (max - min)) + min;
-    }
-
-    public String toString() {
-        return this.getClass().getSimpleName().toLowerCase();
     }
 
     /**

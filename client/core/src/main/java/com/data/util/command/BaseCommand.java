@@ -1,5 +1,6 @@
 package com.data.util.command;
 
+import com.data.util.common.Formatter;
 import com.data.util.generator.Random;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
@@ -76,13 +77,22 @@ public class BaseCommand {
 
             addOption("host", "server host", "192.168.10.7");
             addOption("clear", "clear data", false);
+        }
+    }
 
+    class Useful extends BaseOption {
+        Useful() {
             /**
              * belong to workload, but used always, so put to base command
              */
             addOption("work.total", "request count", 100000);
             addOption("work.thread",  "thread count", 10);
             addOption("work.batch",  "batch request", 100);
+
+            /**
+             * schema
+             */
+            addOption("table.schema", "table schema", "integer, String(4)[10]");
         }
     }
 
@@ -103,7 +113,6 @@ public class BaseCommand {
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////
     public BaseCommand() {}
-
     public BaseCommand(String[] args) {
         initialize(args);
     }
@@ -136,23 +145,25 @@ public class BaseCommand {
         return value;
     }
 
-    public boolean has(String key) { return get(key).length() > 0; }
     public String get(String key) { return get(key, true); }
-
     public String get(String key, String defaultv) {
         String data = get(key, false);
         return data == null ? defaultv : data;
     }
-
     public boolean exist(String key) {
         return !get(key).isEmpty();
     }
 
-    public long getLong(String key) {
-        return Long.parseLong(get(key));
-    }
+    public Long getLong(String key) {
+        String data = get(key);
 
-    public int getInt(String key) {
+        if (Formatter.isNumeric(data)) {
+            return Long.parseLong(data);
+        } else {
+            return Formatter.parseSize(data);
+        }
+    }
+    public Integer getInt(String key) {
         return Integer.parseInt(get(key));
     }
 
@@ -162,7 +173,6 @@ public class BaseCommand {
     public boolean getBool(String key) {
         return Boolean.parseBoolean(get(key));
     }
-
     public <E extends Enum<E>> E getEnum(String key, Class<E> clazz) {
         return Enum.valueOf(clazz, get(key));
     }
@@ -170,7 +180,6 @@ public class BaseCommand {
     public void debug() {
         properties.forEach((k,v) -> log.info("{} -> {}", k, v));
     }
-
     public void debug(String key) {
         properties.forEach((k,v) -> {
             if (((String)k).startsWith(key)) {
@@ -331,7 +340,7 @@ public class BaseCommand {
      */
     protected void construct() {
         addParser("", new Common());
-        addParser("gen", new Random.Option());
+        addParser("", new Useful());
 
         registParser();
     }

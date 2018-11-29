@@ -10,6 +10,12 @@ public class Sequence extends Random {
     long min;
     long max;
 
+    public void set(DataSchema.Item item) {
+        check("integer", item);
+        min = item.min;
+        max = item.max == 0 ? Long.MAX_VALUE : item.max;
+    }
+
     static class SeqBase {
         SeqBase() {}
         SeqBase(long data, long last) {
@@ -56,12 +62,6 @@ public class Sequence extends Random {
             local.set(seq);
         }
         return seq;
-    }
-
-    public void set(DataSchema.Item item) {
-        check("integer", item);
-        min = item.min;
-        max = item.max == 0 ? Long.MAX_VALUE : item.max;
     }
 
     @Override

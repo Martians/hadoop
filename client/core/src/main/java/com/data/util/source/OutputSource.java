@@ -16,39 +16,49 @@ import java.util.*;
 public class OutputSource implements Runnable {
 
     static final Logger log = LoggerFactory.getLogger(OutputSource.class);
-    Thread   thread;
+
+    final String prefix = "file";
+    final String suffix = ".csv";
+
     MemCache cache;
     BaseCommand command;
-    String dataPath = "";
+
     Random random = new Random();
+    boolean randWrite = true;
+    int index = 0;
+    long maxSize;
 
     long total_size;
     long total_line;
 
-    public void initialize(BaseCommand command) {
+    Thread   thread;
+    String dataPath = "";
+    public void initialize(BaseCommand command, String path) {
         this.command = command;
-        cache.command = command;
+        dataPath = path;
 
-        cache = new MemCache();
-        cache.initialize(command.getInt("work.thread"));
+        parseParam();
 
         clearFiles();
 
+        prepare();
+
+        thread = new Thread(this, "output source");
+        thread.start();
+    }
+
+    public void waitThread() throws InterruptedException {
+        thread.join();
+    }
+
+    protected void parseParam() {
         long seed = command.getLong("gen.seed");
         if (seed != 0) {
             random.setSeed(seed);
         }
 
-        thread = new Thread(this, "output stream");
-        thread.start();
-    }
-
-    public void setPath(String path) {
-        dataPath = path;
-    }
-
-    public void waitThread() throws InterruptedException {
-        thread.join();
+        maxSize = command.getLong("gen.output.file_size");
+        randWrite = command.getBool("gen.output.file_rand");
     }
 
     protected void clearFiles() {
@@ -61,24 +71,50 @@ public class OutputSource implements Runnable {
         log.info("try to clear, file range: {}", pathList.size());
     }
 
-    Set<Integer> fileset = new HashSet<>();
+    protected void prepare() {
+        cache.command = command;
+        cache = new MemCache();
+        cache.initialize(command.getInt("work.thread"));
 
-    class Output {
+        if (randWrite) {
+            int count = command.getInt("gen.output.file_count");
+            List<OutputHandler> list = new ArrayList<>();
+            for (int i = 0; i < count; i++) {
+                list.add(nextFile(createRandIndex()));
+            }
+        }
+    }
+
+    public void add(String line) {
+        cache.addOutput(line);
+    }
+    public void complete() {
+        cache.completeOutput();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    List<OutputHandler> handlelist = new ArrayList<>();
+    Set<Integer> randSet = new HashSet<>();
+
+    class OutputHandler {
         BufferedWriter writer;
         String name;
         long size;
     }
+
+    String fileName(int index) {
+        return String.format("%s/%s-%02d%s", dataPath, prefix, index, suffix);
+    }
+
     /**
      * 随机生成文件名
      */
-    String nextFileName() {
-
-        final String prefix = "file";
-        final String suffix = ".csv";
+    int createRandIndex() {
         Integer max = 100;
 
         /** extend file range */
-        while (fileset.size() * 10 / 8 >= max) {
+        while (randSet.size() * 10 / 8 >= max) {
             max = max * 10;
         }
 
@@ -86,15 +122,15 @@ public class OutputSource implements Runnable {
         max = Integer.max(max, command.getInt("gen.output.file_count"));
 
         /** only one file */
-        if (fileset.size() == 0 &&
+        if (randSet.size() == 0 &&
                 command.getInt("gen.output.file_count") == 1)
         {
             index = 0;
 
-        } else if (fileset.size() < max) {
+        } else if (randSet.size() < max) {
             do {
                 index = Math.abs(random.nextInt()) % max;
-            } while (fileset.contains(index));
+            } while (randSet.contains(index));
 
         } else {
             log.warn("file_count only {}, file_size {}, too small to hold file",
@@ -103,16 +139,15 @@ public class OutputSource implements Runnable {
             System.exit(-1);
         }
 
-        fileset.add(index);
-        return String.format("%s/%s-%02d%s",
-                dataPath, prefix, index, suffix);
+        randSet.add(index);
+        return index;
     }
 
-    Output nextFile() {
+    OutputHandler nextFile(int index) {
         try {
-            String name = nextFileName();
+            String name = fileName(index);
             BufferedWriter file = new BufferedWriter(new FileWriter(name));
-            Output out = new Output();
+            OutputHandler out = new OutputHandler();
             out.writer = file;
             out.name = name;
             out.size = 0;
@@ -127,23 +162,30 @@ public class OutputSource implements Runnable {
         }
     }
 
-    public void add(String line) {
-        cache.addOutput(line);
+    OutputHandler nextHandle() {
+        if (randWrite) {
+            int index = Math.abs(random.nextInt()) % handlelist.size();
+            return handlelist.get(index);
+
+        } else {
+            return handlelist.get(0);
+        }
     }
-    public void complete() {
-        cache.completeOutput();
+
+    void switchFile(OutputHandler out) throws IOException {
+        out.writer.close();
+        handlelist.remove(out);
+
+        if (randWrite) {
+            handlelist.add(nextFile(createRandIndex()));
+
+        } else {
+            handlelist.add(nextFile(index++));
+        }
     }
 
     @Override
     public void run() {
-
-        long maxSize = command.getLong("gen.output.file_size");
-
-        int count = command.getInt("gen.output.file_count");
-        List<Output> list = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            list.add(nextFile());
-        }
 
         try {
             while (true) {
@@ -152,31 +194,26 @@ public class OutputSource implements Runnable {
                     break;
                 }
 
-                int index = Math.abs(random.nextInt()) % list.size();
-                Output out = list.get(index);
-
-                if (maxSize > 0 && out.size >= maxSize) {
-                    out.writer.close();
-                    list.remove(out);
-
-                    out = nextFile();
-                    list.add(out);
-                }
-
+                OutputHandler out = nextHandle();
                 out.writer.write(line);
                 out.writer.write("\n");
 
                 long size = line.length() + 1;
                 out.size += size;
+
                 total_size += size;
                 total_line++;
+
+                if (maxSize > 0 && out.size >= maxSize) {
+                    switchFile(out);
+                }
             }
         } catch (IOException e) {
             System.out.println("write file Error: " + e);
             System.exit(-1);
 
         } finally {
-            for (Output out : list) {
+            for (OutputHandler out : handlelist) {
                 try {
                     out.writer.close();
 
@@ -185,19 +222,20 @@ public class OutputSource implements Runnable {
                     System.exit(-1);
                 }
             }
-            list.clear();
+            handlelist.clear();
         }
 
         log.info("write file complete, count: {}, total line: [{}], size: [{}]",
-                fileset.size(), Formatter.formatIOPS(total_line), Formatter.formatSize(total_size));
+                randSet.size(), Formatter.formatIOPS(total_line), Formatter.formatSize(total_size));
     }
 
     public static void main(String[] args) {
         int  thnum = 10;
         long total = 10000000L;
 
-        String arglist = String.format("-thread %d", thnum);
+        String arglist = "";
         BaseCommand command = new BaseCommand(arglist.split(" "));
+        DataSource.regist(command);
 
         command.set("gen.data_path", "test");
         command.set("gen.output.file_count", "10");
@@ -206,8 +244,7 @@ public class OutputSource implements Runnable {
         //command.fixSize("gen.output.file_size");
 
         OutputSource output = new OutputSource();
-        output.setPath("test");
-        output.initialize(command);
+        output.initialize(command, "test");
 
         class Worker extends ThreadTest.TThread {
             OutputSource output;
