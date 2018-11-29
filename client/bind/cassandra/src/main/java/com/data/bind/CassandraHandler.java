@@ -1,7 +1,7 @@
 package com.data.bind;
 
 import com.data.source.DataSource;
-import com.data.monitor.MetricTracker;
+import com.data.util.monitor.MetricTracker;
 import com.data.util.schema.DataSchema;
 import com.datastax.driver.core.*;
 import org.slf4j.Logger;
@@ -457,7 +457,7 @@ public class CassandraHandler extends AppHandler {
             }
 
             if (result[0] > 0) {
-                MetricTracker.tracker.get(command.type)
+                MetricTracker.tracker.get(command.step)
                         .add(result[0], result[1], end);
                 success[0] += result[0];
             }

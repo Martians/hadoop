@@ -1,5 +1,6 @@
 package com.data.util.schema;
 
+import com.data.util.command.BaseCommand;
 import com.data.util.generator.Random;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,7 @@ import java.util.regex.Pattern;
  */
 public class DataSchema {
     static final Logger log = LoggerFactory.getLogger(DataSchema.class);
+    BaseCommand command;
 
     public enum Type {
         string,
@@ -136,6 +138,9 @@ public class DataSchema {
     }
 
     public List<Item> list = new ArrayList<>();
+    public void set(BaseCommand command) {
+        this.command = command;
+    }
 
     public void initialize(String schemaString) {
         list.clear();
@@ -190,7 +195,7 @@ public class DataSchema {
     }
 
     public void parse(String line) {
-        log.info("parse: {}", line);
+        log.debug("parse: {}", line);
         Item item = new Item();
 
         String typePartten = "^\\w+";
@@ -240,7 +245,7 @@ public class DataSchema {
             }
         }
         if (item.gen == null) {
-            Random.defaultRandom(item);
+            Random.defaultRandom(item, command);
         }
 
         /**
@@ -343,6 +348,10 @@ public class DataSchema {
      */
     public static void main(String[] args) {
         DataSchema schema = new DataSchema();
+        BaseCommand command = new BaseCommand();
+        command.initialize("".split(""));
+        schema.set(command);
+
         schema.initialize("integer(56, 70),\t String[20]{5} @fix ");
         schema.initialize("String(20){5} @fix ");
 

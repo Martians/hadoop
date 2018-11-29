@@ -1,6 +1,6 @@
-package com.data.monitor;
+package com.data.util.monitor;
 
-import com.data.base.Command;
+import com.data.util.command.BaseCommand;
 import com.data.util.common.Formatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,15 +33,21 @@ public class MetricTracker extends Thread {
     Object initLock = new Object();
     Metric total = new Metric();
 
-    Metric[] array;
+    static Metric[] array;
     long time;
     int count;
     boolean threadFlag;
-    Command command;
+    BaseCommand command;
 
-    static public void initialize(Command command) {
+    static public void initialize(BaseCommand command, int size) {
         tracker = new MetricTracker();
         tracker.command = command;
+
+        array = new Metric[size];
+        for (int i = 0; i < size; i++) {
+            array[i] = new Metric("");
+            array[i].clear();
+        }
 
         tracker.startThread();
     }
@@ -55,12 +61,6 @@ public class MetricTracker extends Thread {
     public void startThread() {
         if (!threadFlag) {
             threadFlag = true;
-
-            array = new Metric[Command.Type.end.ordinal() + 1];
-            for (Command.Type e : Command.Type.values()) {
-                array[e.ordinal()] = new Metric(e.name());
-                array[e.ordinal()].clear();
-            }
 
             /**
              * 只有该线程在运行，程序会退出
@@ -82,10 +82,6 @@ public class MetricTracker extends Thread {
                 }
             }
         }
-    }
-
-    public Metric get(Command.Type type) {
-        return array[type.ordinal()];
     }
 
     public Metric get(int index) {
@@ -114,17 +110,17 @@ public class MetricTracker extends Thread {
     public void sumarry(boolean last) {
         long elapse = System.nanoTime() - time;
 
-        log.info(typeMetric(command.type, elapse, last));
+        log.info(typeMetric(command.step, elapse, last));
 
     }
 
-    String typeMetric(Command.Type type, long elapse, boolean last) {
-        Metric metric = get(type);
+    String typeMetric(int index, long elapse, boolean last) {
+        Metric metric = get(index);
         metric.reset();
 
         String message = String.format("[%s] ", Formatter.formatElapse(elapse));
 
-        message += String.format("%s: %5s, latency: %7s, size: %7s, ", command.type,
+        message += String.format("%s: %5s, latency: %7s, size: %7s, ", command.currStep(),
                     Formatter.formatIOPS(metric.last_iops),
                     Formatter.formatLatency(metric.last_time, metric.last_iops),
                     Formatter.formatSize(metric.last_size));

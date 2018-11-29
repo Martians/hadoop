@@ -2,7 +2,7 @@ package com.data.bind;
 
 
 import com.data.source.DataSource;
-import com.data.monitor.MetricTracker;
+import com.data.util.monitor.MetricTracker;
 import io.lettuce.core.LettuceFutures;
 import io.lettuce.core.RedisFuture;
 import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands;
@@ -119,7 +119,7 @@ public class LettuceAsyncAccept extends LettuceSync {
                 future.thenAccept(x -> {
                     release();
 
-                    MetricTracker.tracker.get(command.type)
+                    MetricTracker.tracker.get(command.step)
                             .add(1, size, System.nanoTime() - start);
                 });
 
@@ -164,7 +164,7 @@ public class LettuceAsyncAccept extends LettuceSync {
                             System.exit(-1);
                         }
                     } else {
-                        MetricTracker.tracker.get(command.type)
+                        MetricTracker.tracker.get(command.step)
                                 .add(1, size, System.nanoTime() - start);
                     }
                 });

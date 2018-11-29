@@ -3,7 +3,7 @@ package com.data.base;
 import com.data.bind.AppHandler;
 import com.data.source.DataSource;
 import com.data.source.OutputSource;
-import com.data.monitor.MetricTracker;
+import com.data.util.monitor.MetricTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +68,7 @@ public class Scheduler {
         log.info("========================================================================");
         log.info("{}, {}", command.dumpLoad(), handler.dumpLoad());
         log.info("  \t{}, thread {}, batch {}",
-                source.dumpLoad(), command.param.thread, command.workp.batch);
+                source.dumpLoad(), command.param.thread, command.param.batch);
         log.info("========================================================================");
 
         try {
@@ -82,7 +82,8 @@ public class Scheduler {
     }
 
     public void startThread(AppHandler handler) {
-        MetricTracker.initialize(command);
+
+        MetricTracker.initialize(command, Command.Type.end.ordinal() + 1);
 
         for (int index = 0; index < command.param.thread; index++) {
             iopsThreads.add(new IOPSThread(index, this));

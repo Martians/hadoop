@@ -24,8 +24,6 @@ public class ClientOption {
              *          3）input file with keys data，generate by scan
              */
             addOption("type",  "write、read、scan; load、generate", "write");
-
-            addOption("batch",  "batch request", 100);
             addOption("read_thread",  "specific read thread", 0);
 
             /**

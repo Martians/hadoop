@@ -20,6 +20,8 @@ public class Random {
     static final String KeyString = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
     static final ThreadLocal<java.util.Random> rand = new ThreadLocal<>();
+    public boolean valid = true;
+
     long threadIndex = 0;
     long recordSeed = 0;
 
@@ -33,14 +35,14 @@ public class Random {
 
     public static class Option extends BaseOption {
         protected void initialize() {
-
             addOption("seed",  "random seed",0);
-            //addOption("key_type",  "key type：rand、uuid、seq、table、fix", "rand");
-            //addOption("data_type",  "key type：rand、uuid、seq、table、fix", "rand");
 
             addOption("data_path", "data file path; if setted, output[generate、scan], input[load、read]", "");
             addOption("output.file_count", "min output file count", 1);
             addOption("output.file_size", "output file size (M)", "-1");
+
+            addOption("integer",  "integer generator","numeric");
+            addOption("string",  "string generator","random");
         }
     }
 
@@ -69,6 +71,9 @@ public class Random {
         } else if ("numeric".startsWith(name)) {
             return new Numeric();
 
+        } else if ("null".startsWith(name)) {
+            return new Invalid();
+
         } else {
             log.info("unknown generator: {}, valid: numeric, random, fixed, sequence, table, uuid", name);
             System.exit(-1);
@@ -76,11 +81,11 @@ public class Random {
         }
     }
 
-    public static void defaultRandom(DataSchema.Item item) {
+    public static void defaultRandom(DataSchema.Item item, BaseCommand command) {
         if (item.type == DataSchema.Type.integer) {
-            item.gen = newRandom("numeric");
+            item.gen = newRandom(command.get("gen.integer"));
         } else {
-            item.gen = newRandom("random");
+            item.gen = newRandom(command.get("gen.string"));
         }
     }
 
@@ -106,6 +111,10 @@ public class Random {
         }
     }
 
+    /**
+     *
+     * 注册时进行检查
+     */
     public void set(DataSchema.Item item) {
         check("integer, string", item);
     }

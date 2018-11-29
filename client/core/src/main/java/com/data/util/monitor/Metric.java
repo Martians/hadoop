@@ -1,4 +1,4 @@
-package com.data.monitor;
+package com.data.util.monitor;
 
 import java.util.concurrent.atomic.AtomicLong;
 

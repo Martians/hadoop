@@ -9,7 +9,7 @@ import com.data.source.DataSource;
 import com.data.source.InputSource;
 import com.data.source.MemCache;
 import com.data.source.ScanSource;
-import com.data.monitor.MetricTracker;
+import com.data.util.monitor.MetricTracker;
 import com.data.util.sys.ExtClassPathLoader;
 import com.data.bind.AppHandler;
 import java.net.InetAddress;
@@ -37,18 +37,16 @@ public class Command extends BaseCommand {
     public Type type;
     public DataSchema schema = new DataSchema();
 
+    public class WorkParam {
+        public int   fetch = getInt("work.fetch");
+    }
+    public WorkParam workp;
+
     public class TableParam {
         public boolean dump_select = getBool("table.dump_select");
         public long read_empty = getLong("table.read_empty");
     }
     public TableParam table;
-
-    public class WorkParam {
-        public int   batch = Integer.max(getInt("work.batch"), 1);
-        public int   fetch = getInt("work.fetch");
-        public long  seed  = getLong("gen.seed");
-    }
-    public WorkParam workp;
 
     /**
      * 内部状态
@@ -179,6 +177,7 @@ public class Command extends BaseCommand {
     }
 
     void parseSchema() {
+        schema.set(this);
         schema.initialize(get("table.schema"));
     }
 
@@ -216,8 +215,8 @@ public class Command extends BaseCommand {
 
     void fixingParam() {
 
-        if (workp.batch > 0) {
-            workp.fetch = Math.max(workp.fetch, workp.batch);
+        if (param.batch > 0) {
+            workp.fetch = Math.max(workp.fetch, param.batch);
         }
 
         if (param.thread > 1000) {
@@ -277,6 +276,8 @@ public class Command extends BaseCommand {
         }
         if (stepList.size() > 0) {
             type = stepList.get(0);
+
+            currStep(type.toString());
 
             param.thread = getInt("work.thread");
             if (type == Type.read && exist("gen.data_path")) {

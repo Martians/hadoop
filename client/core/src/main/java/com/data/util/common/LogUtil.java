@@ -11,9 +11,6 @@ package com.data.util.common;
  * https://www.programcreek.com/java-api-examples/?class=ch.qos.logback.classic.Logger&method=setLevel
  */
 
-import org.apache.logging.log4j.core.Logger;
-import org.apache.logging.log4j.core.LoggerContext;
-
 public class LogUtil {
     //static final Logger log = LoggerFactory.getLogger(LogUtil.class);
     /**

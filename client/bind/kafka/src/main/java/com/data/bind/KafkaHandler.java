@@ -531,7 +531,7 @@ public class KafkaHandler extends AppHandler {
                     result[0] += 1;
                     result[1] += record.serializedKeySize() + record.serializedValueSize();
 
-                    if (command.param.dump_select) {
+                    if (command.table.dump_select) {
                         log.info("recv data, {}", record);
                     }
                 }

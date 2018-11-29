@@ -29,7 +29,7 @@ public class ParseYAML {
             return properties;
 
         } catch (Exception e) {
-            log.error("load config file {} failed, {}", file, e);
+            log.error("load yaml file {} failed, maybe invalid: {}", file, e);
             return null;
         }
     }

@@ -2,13 +2,10 @@ package com.data.util.command;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 public class ParseProperty {

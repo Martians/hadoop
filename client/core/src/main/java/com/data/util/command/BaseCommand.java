@@ -61,6 +61,7 @@ public class BaseCommand {
     public class ClientParam {
         public Long  total = getLong("work.total");
         public int   thread = getInt("work.thread");
+        public int   batch = Integer.max(getInt("work.batch"), 1);
     }
     public ClientParam param;
 
@@ -81,7 +82,22 @@ public class BaseCommand {
              */
             addOption("work.total", "request count", 100000);
             addOption("work.thread",  "thread count", 10);
+            addOption("work.batch",  "batch request", 100);
         }
+    }
+
+    /**
+     * 用于暴露内部执行状态
+     */
+    public int step = 0;
+    protected String stepString;
+
+    public void currStep(String str) {
+        step++;
+        stepString = str;
+    }
+    public String currStep() {
+        return stepString;
     }
 
 
@@ -122,6 +138,11 @@ public class BaseCommand {
 
     public boolean has(String key) { return get(key).length() > 0; }
     public String get(String key) { return get(key, true); }
+
+    public String get(String key, String defaultv) {
+        String data = get(key, false);
+        return data == null ? defaultv : data;
+    }
 
     public boolean exist(String key) {
         return !get(key).isEmpty();
@@ -469,7 +490,7 @@ public class BaseCommand {
         dumpConfig();
     }
 
-    protected void unregistOption(org.apache.commons.cli.Options commandLine) {
+    protected void unregistOption(Options commandLine) {
 
         /**
          * 将从当前配置中已经读取了的未注册配置，也加入到option中来

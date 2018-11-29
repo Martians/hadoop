@@ -30,7 +30,7 @@ public class DataSource {
         total.getAndSet(command.param.total);
 
         /**
-         * 初始化相关的 Genertor
+         * 初始化相关的 Generator
          */
         for (DataSchema.Item item : command.schema.list) {
             item.gen.set(command);
@@ -73,7 +73,7 @@ public class DataSource {
     }
 
     public boolean ending() {
-        final long remain = command.param.thread * command.workp.batch;
+        final long remain = command.param.thread * command.param.batch;
         return total.get() <= remain;
     }
     public long total() { return total.get(); }

@@ -5,7 +5,7 @@ import com.data.base.Scheduler;
 import com.data.source.DataSource;
 import com.data.source.OutputSource;
 import com.data.util.command.BaseOption;
-import com.data.monitor.MetricTracker;
+import com.data.util.monitor.MetricTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +52,7 @@ public class AppHandler {
 
     public void performWrite(int[] success) {
         int count = success[2];
-        int loops = (count + command.workp.batch - 1) / command.workp.batch;
+        int loops = (count + command.param.batch - 1) / command.param.batch;
         boolean exit = false;
 
         int result[] = new int[2];
@@ -61,7 +61,7 @@ public class AppHandler {
             result[0] = 0;
             result[1] = 0;
 
-            int curr = Integer.min(command.workp.batch, count);
+            int curr = Integer.min(command.param.batch, count);
             count -= curr;
 
             if ((write(result, curr)) < 0) {
@@ -79,7 +79,7 @@ public class AppHandler {
 
     public void performRead(int[] success) {
         int count = success[2];
-        int loops = (count + command.workp.batch - 1) / command.workp.batch;
+        int loops = (count + command.param.batch - 1) / command.param.batch;
         boolean exit = false;
 
         int result[] = new int[2];
@@ -88,7 +88,7 @@ public class AppHandler {
             result[0] = 0;
             result[1] = 0;
 
-            int curr = Integer.min(command.workp.batch, count);
+            int curr = Integer.min(command.param.batch, count);
             count -= curr;
 
             if ((read(result, curr)) < 0) {
@@ -108,7 +108,7 @@ public class AppHandler {
     /////////////////////////////////////////////////////////////////////////////////////////////////
     protected void checkResult(int[] success, int[] result, long start) {
         if (result[0] > 0) {
-            MetricTracker.tracker.get(command.type)
+            MetricTracker.tracker.get(command.step)
                     .add(result[0], result[1], System.nanoTime() - start);
             success[0] += result[0];
 
@@ -143,7 +143,7 @@ public class AppHandler {
 
     public void performGen(int[] success) {
         int count = success[2];
-        int loops = (count + command.workp.batch - 1) / command.workp.batch;
+        int loops = (count + command.param.batch - 1) / command.param.batch;
         boolean exit = false;
 
         if (count == 0) {
@@ -157,7 +157,7 @@ public class AppHandler {
             result[0] = 0;
             result[1] = 0;
 
-            int curr = Integer.min(command.workp.batch, count);
+            int curr = Integer.min(command.param.batch, count);
             count -= curr;
 
             for (int b = 0; b < curr; b++) {
