@@ -111,8 +111,8 @@ public class BaseCommand {
     /**
      * 手动强制设置某个选项
      */
-    public void set(String key, String value) {
-        properties.setProperty(key, value);
+    public void set(String key, Object value) {
+        properties.setProperty(key, value.toString());
     }
 
     public String get(String key, boolean force) {

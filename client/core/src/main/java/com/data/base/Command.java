@@ -5,10 +5,10 @@ import com.data.util.command.BaseCommand;
 import com.data.util.command.BaseOption;
 import com.data.util.common.Formatter;
 import com.data.util.schema.DataSchema;
-import com.data.source.DataSource;
-import com.data.source.InputSource;
-import com.data.source.MemCache;
-import com.data.source.ScanSource;
+import com.data.util.source.DataSource;
+import com.data.util.source.InputSource;
+import com.data.util.source.MemCache;
+import com.data.util.source.ScanSource;
 import com.data.util.monitor.MetricTracker;
 import com.data.util.sys.ExtClassPathLoader;
 import com.data.bind.AppHandler;
@@ -390,18 +390,18 @@ public class Command extends BaseCommand {
     }
 
     DataSource createGenerator() {
-        DataSource generator = null;
+        DataSource source = null;
 
         switch (type) {
             case read:
                 break;
             case write:
-            case generate: generator = new DataSource();
+            case generate: source = new DataSource();
                 break;
 
-            case load:  generator = new InputSource();
+            case load:  source = new InputSource();
                 break;
-            case scan:  generator = new ScanSource();
+            case scan:  source = new ScanSource();
                 break;
             default:
                 log.info("err type: {}", type);
@@ -409,17 +409,21 @@ public class Command extends BaseCommand {
                 break;
         }
 
-        if (generator == null) {
+        if (source == null) {
             if (exist("gen.data_path")) {
-                generator = new InputSource();
+                source = new InputSource();
             } else {
-                generator = new DataSource();
+                source = new DataSource();
             }
         }
 
-        generator.set(this);
-        generator.initialize();
-        return generator;
+        if (source instanceof InputSource) {
+            ((InputSource) source).setPath(dataPath());
+        }
+
+        source.set(this, schema);
+        source.initialize();
+        return source;
     }
 
     public void lastFixed() {

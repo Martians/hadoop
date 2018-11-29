@@ -44,27 +44,22 @@ public class DataSchema {
     public enum Type {
         string,
         integer,
+        object,
     };
 
     static public int actualSize(String str) {
         return str.length() + 4;
     }
-
     static public int actualSize(int data) {
         return 4;
     }
-
-    static public int actualSize(long data) {
-        return 8;
-    }
+    static public int actualSize(long data) { return 8; }
 
     static public int stringSize(int len) {
         return len + 4;
     }
-
-    static public int intSize() {
-        return 4;
-    }
+    static public int intSize() { return 4; }
+    static public int longSize() { return 8; }
 
     /**
      * schema item
@@ -135,11 +130,28 @@ public class DataSchema {
         public boolean isString() {
             return type == Type.string;
         }
+
+        public void set(Random rand) {
+            gen = rand;
+            gen.set(command);
+            gen.set(this);
+        }
     }
 
     public List<Item> list = new ArrayList<>();
     public void set(BaseCommand command) {
         this.command = command;
+    }
+
+    public void set(int index, Random random) {
+        Item item = list.get(index);
+        if (item.gen != null && item.gen.valid) {
+            log.info("schema index {} [{}] already have generator", index, item);
+            System.exit(-1);
+
+        } else {
+            item.set(random);
+        }
     }
 
     public void initialize(String schemaString) {
@@ -236,16 +248,17 @@ public class DataSchema {
          *      string @table
          *      string @numeric
          */
+        Random rand = null;
         String genPartten = "@\\W*(\\w+)\\W*";
         pattern = Pattern.compile(genPartten);
         match = pattern.matcher(line);
         if (match.find()) {
             if (match.group(1) != null) {
-                item.gen = Random.newRandom(match.group(1));
+                rand = Random.newRandom(match.group(1));
             }
         }
-        if (item.gen == null) {
-            Random.defaultRandom(item, command);
+        if (rand == null) {
+            rand = Random.defaultRandom(item, command);
         }
 
         /**
@@ -277,10 +290,10 @@ public class DataSchema {
         }
 
         invalid(line, repeat, indexPointer, item);
-        initial(item);
+        item.set(rand);
 
         if (indexPointer >= 0) {
-            item.gen = list.get(indexPointer).gen;
+            item.set(list.get(indexPointer).gen);
         }
 
         for (int i = 0; i < repeat; i++) {
@@ -302,7 +315,7 @@ public class DataSchema {
             //    System.exit(-1);
             //}
 
-        } else {
+        } else if (item.type == Type.string) {
             item.len = (int)item.max;
 
             //if ("numeric".equals(item.gen.toString())) {
@@ -327,10 +340,6 @@ public class DataSchema {
                 System.exit(-1);
             }
         }
-    }
-
-    public void initial(Item item) {
-        item.gen.set(item);
     }
 
     /**

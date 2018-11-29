@@ -1,14 +1,16 @@
-package com.data.source;
+package com.data.util.source;
 
-import com.data.base.Command;
+import com.data.util.command.BaseCommand;
 import com.data.util.common.Formatter;
 import com.data.util.disk.Disk;
 import com.data.util.test.ThreadTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.nio.file.*;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 
 public class OutputSource implements Runnable {
@@ -16,13 +18,14 @@ public class OutputSource implements Runnable {
     static final Logger log = LoggerFactory.getLogger(OutputSource.class);
     Thread   thread;
     MemCache cache;
-    Command command;
+    BaseCommand command;
+    String dataPath = "";
     Random random = new Random();
 
     long total_size;
     long total_line;
 
-    public void initialize(Command command) {
+    public void initialize(BaseCommand command) {
         this.command = command;
         cache.command = command;
 
@@ -40,12 +43,21 @@ public class OutputSource implements Runnable {
         thread.start();
     }
 
+    public void setPath(String path) {
+        dataPath = path;
+    }
+
     public void waitThread() throws InterruptedException {
         thread.join();
     }
 
     protected void clearFiles() {
-        List<Path> pathList = Disk.deletePath(command.dataPath(), "csv");
+        if (dataPath.isEmpty()) {
+            log.info("load file, but data path empty");
+            System.exit(-1);
+        }
+
+        List<Path> pathList = Disk.deletePath(dataPath, "csv");
         log.info("try to clear, file range: {}", pathList.size());
     }
 
@@ -93,7 +105,7 @@ public class OutputSource implements Runnable {
 
         fileset.add(index);
         return String.format("%s/%s-%02d%s",
-                command.dataPath(), prefix, index, suffix);
+                dataPath, prefix, index, suffix);
     }
 
     Output nextFile() {
@@ -143,7 +155,7 @@ public class OutputSource implements Runnable {
                 int index = Math.abs(random.nextInt()) % list.size();
                 Output out = list.get(index);
 
-                if (out.size >= maxSize) {
+                if (maxSize > 0 && out.size >= maxSize) {
                     out.writer.close();
                     list.remove(out);
 
@@ -185,15 +197,16 @@ public class OutputSource implements Runnable {
         long total = 10000000L;
 
         String arglist = String.format("-thread %d", thnum);
-        Command command = new Command(arglist.split(" "), true);
+        BaseCommand command = new BaseCommand(arglist.split(" "));
 
         command.set("gen.data_path", "test");
         command.set("gen.output.file_count", "10");
         command.set("gen.output.file_size", "1M");
         command.set("work.thread", Integer.toString(thnum));
-        command.fixSize("gen.output.file_size");
+        //command.fixSize("gen.output.file_size");
 
         OutputSource output = new OutputSource();
+        output.setPath("test");
         output.initialize(command);
 
         class Worker extends ThreadTest.TThread {

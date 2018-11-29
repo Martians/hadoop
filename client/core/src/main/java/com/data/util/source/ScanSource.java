@@ -1,4 +1,4 @@
-package com.data.source;
+package com.data.util.source;
 
 import com.data.util.common.Formatter;
 

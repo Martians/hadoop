@@ -1,18 +1,20 @@
-package com.data.source;
+package com.data.util.source;
 
-import com.data.base.Command;
+import com.data.util.command.BaseCommand;
+import com.data.util.common.Formatter;
 import com.data.util.generator.Random;
 import com.data.util.schema.DataSchema;
 import com.data.util.test.ThreadTest;
-import com.data.util.common.Formatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import static com.data.util.test.ThreadTest.debugThread;
 
@@ -22,6 +24,7 @@ public class InputSource extends DataSource implements Runnable {
     Thread  thread;
     MemCache cache;
     Long total_size = 0L;
+    String dataPath = "";
     List<Path> pathList = new ArrayList<>();
 
     @Override
@@ -39,6 +42,10 @@ public class InputSource extends DataSource implements Runnable {
         thread.start();
     }
 
+    public void setPath(String path) {
+        dataPath = path;
+    }
+
     @Override
     public int nextWork(int tryCount) {
         return tryCount;
@@ -47,7 +54,7 @@ public class InputSource extends DataSource implements Runnable {
     @Override
     public String dumpLoad() {
         return String.format("workload: path [%s], file %d",
-                command.dataPath(), pathList.size());
+                dataPath, pathList.size());
     }
 
     @Override
@@ -64,13 +71,13 @@ public class InputSource extends DataSource implements Runnable {
         String[] split = line.split(", ");
         Object[] array = null;
 
-        if (command.schema.list.size() != split.length) {
+        if (schema.list.size() != split.length) {
             log.warn("input source, schema size: {}, split: {}, line: {}",
-                    command.schema.list.size(), split.length, line);
+                    schema.list.size(), split.length, line);
             System.exit(-1);
         }
 
-        List<DataSchema.Item> list = command.schema.list;
+        List<DataSchema.Item> list = schema.list;
         array = new Object[list.size()];
         System.arraycopy(split, 0, array, 0, list.size());
 
@@ -86,10 +93,10 @@ public class InputSource extends DataSource implements Runnable {
         }
 
         //} else {
-        //    array = new Object[command.schema.primaryKey.size()];
+        //    array = new Object[schema.primaryKey.size()];
         //
-        //    for (Integer p : command.schema.primaryKey) {
-        //        DataSchema.Item item = command.schema.list.get(p);
+        //    for (Integer p : schema.primaryKey) {
+        //        DataSchema.Item item = schema.list.get(p);
         //        if (item.type == integer) {
         //            split[index] = Long.parseLong((String)split[p]);
         //        }
@@ -101,6 +108,11 @@ public class InputSource extends DataSource implements Runnable {
     }
 
     public void loadFiles() {
+        if (dataPath.isEmpty()) {
+            log.info("load file, but data path empty");
+            System.exit(-1);
+        }
+
         class MyFileVisitor extends SimpleFileVisitor<Path> {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
@@ -113,13 +125,13 @@ public class InputSource extends DataSource implements Runnable {
         }
 
         try {
-            Path path = Paths.get(command.dataPath());
+            Path path = Paths.get(dataPath);
             Files.walkFileTree(path, new MyFileVisitor());
 
         } catch(IOException e) {
             log.info("I/O Error, current {}, given {} ",
                     System.getProperty("user.dir"),
-                    command.dataPath(), e);
+                    dataPath, e);
             System.exit(-1);
         }
         log.info("try to load, file range: {}", pathList.size());
@@ -161,10 +173,14 @@ public class InputSource extends DataSource implements Runnable {
         /**
          * command 中设置的 thread 个数，必须大于 thnum
          */
-        String arglist = String.format("-schema string(4),string(4)[%d] -thread %d", fildNum, thnum);
-        InputSource input = new InputSource();
-        Command command = new Command(arglist.split(" "), true);
+        String arglist = String.format("-table_schema string(4),string(4){%d} -thread %d", fildNum, thnum);
+
+        BaseCommand command = new BaseCommand();
         command.set("gen.data_path", "test");
+        //command.set("dump", "true");
+        command.addParser("cache",  new MemCache.BaseOption());
+        //command.addParser("table",  new ClientOption.Table());
+        command.initialize(arglist.split(" "));
 
         try {
             Files.createDirectories(Paths.get("test"));
@@ -197,8 +213,16 @@ public class InputSource extends DataSource implements Runnable {
         }
         log.info("write data completed");
 
-        input.set(command);
+        DataSchema schema = new DataSchema();
+        schema.set(command);
+        schema.initialize(command.get("table.schema"));
+
+        InputSource input = new InputSource();
+        input.set(command, schema);
+
+        input.setPath("test");
         input.initialize();
+
         Set<Long> set = new ConcurrentSkipListSet<>();
 
         class Worker extends ThreadTest.TThread {

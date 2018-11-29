@@ -1,6 +1,6 @@
-package com.data.source;
+package com.data.util.source;
 
-import com.data.base.Command;
+import com.data.util.command.BaseCommand;
 import com.data.util.common.Formatter;
 import com.data.util.schema.DataSchema;
 import org.slf4j.Logger;
@@ -15,15 +15,15 @@ import java.util.concurrent.atomic.AtomicLong;
 public class DataSource {
     static final Logger log = LoggerFactory.getLogger(DataSource.class);
 
-    protected Command command;
+    protected BaseCommand command;
     DataSchema schema;
 
     private AtomicLong total = new AtomicLong(0);
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    public void set(Command command) {
+    public void set(BaseCommand command, DataSchema schema) {
         this.command = command;
-        this.schema = command.schema;
+        this.schema = schema;
     }
 
     public void initialize() {
@@ -32,7 +32,7 @@ public class DataSource {
         /**
          * 初始化相关的 Generator
          */
-        for (DataSchema.Item item : command.schema.list) {
+        for (DataSchema.Item item : schema.list) {
             item.gen.set(command);
             item.gen.prepare(item);
         }
@@ -40,7 +40,7 @@ public class DataSource {
 
     public void threadPrepare(int index) {
         int itemIndex = 0;
-        for (DataSchema.Item item : command.schema.list) {
+        for (DataSchema.Item item : schema.list) {
             item.gen.threadPrepare(index + itemIndex);
             itemIndex++;
         }

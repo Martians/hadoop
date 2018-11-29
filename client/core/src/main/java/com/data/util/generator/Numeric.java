@@ -7,8 +7,14 @@ public class Numeric extends Random {
 
     public void set(DataSchema.Item item) {
         check("integer", item);
-        min = item.min;
-        max = item.max;
+
+        if (item.max != 0) {
+            min = item.min;
+            max = item.max;
+        } else {
+            min = command.getLong("gen.integer.min");
+            max = command.getLong("gen.integer.max");
+        }
     }
 
     @Override

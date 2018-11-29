@@ -1,6 +1,6 @@
 package com.data.bind;
 
-import com.data.source.DataSource;
+import com.data.util.source.DataSource;
 import com.data.util.monitor.MetricTracker;
 import com.data.util.schema.DataSchema;
 import com.datastax.driver.core.*;

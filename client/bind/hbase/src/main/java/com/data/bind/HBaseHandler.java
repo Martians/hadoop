@@ -1,6 +1,6 @@
 package com.data.bind;
 
-import com.data.source.DataSource;
+import com.data.util.source.DataSource;
 import com.data.util.schema.DataSchema;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.*;

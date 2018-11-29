@@ -33,6 +33,21 @@ public class Random {
         this.command = command;
     }
 
+    /**
+     *
+     * 注册时进行检查
+     */
+    public void set(DataSchema.Item item) {
+        check("integer, string", item);
+    }
+
+    protected void check(String support, DataSchema.Item item) {
+        if (support.indexOf(item.type.toString()) == -1) {
+            log.info("generator [{}] not support schema type [{}], item: {}", this, item.type, item);
+            System.exit(-1);
+        }
+    }
+
     public static class Option extends BaseOption {
         protected void initialize() {
             addOption("seed",  "random seed",0);
@@ -41,8 +56,10 @@ public class Random {
             addOption("output.file_count", "min output file count", 1);
             addOption("output.file_size", "output file size (M)", "-1");
 
-            addOption("integer",  "integer generator","numeric");
-            addOption("string",  "string generator","random");
+            addOption("integer.gen",  "integer generator","numeric");
+            addOption("integer.min",  "integer default min value", 0);
+            addOption("integer.max",  "integer defautl max value",0);
+            addOption("string.gen",  "string generator","random");
         }
     }
 
@@ -81,12 +98,17 @@ public class Random {
         }
     }
 
-    public static void defaultRandom(DataSchema.Item item, BaseCommand command) {
+    public static Random defaultRandom(DataSchema.Item item, BaseCommand command) {
         if (item.type == DataSchema.Type.integer) {
-            item.gen = newRandom(command.get("gen.integer"));
-        } else {
-            item.gen = newRandom(command.get("gen.string"));
+            return newRandom(command.get("gen.integer.gen"));
+
+        } else if (item.type == DataSchema.Type.string) {
+            return newRandom(command.get("gen.string.gen"));
+
+        } else if (item.type == DataSchema.Type.object) {
+            return newRandom("null");
         }
+        return null;
     }
 
     /**
@@ -108,21 +130,6 @@ public class Random {
         if (seed != 0 && recordSeed == 0) {
             recordSeed = seed + index;
             getRandom().setSeed(recordSeed);
-        }
-    }
-
-    /**
-     *
-     * 注册时进行检查
-     */
-    public void set(DataSchema.Item item) {
-        check("integer, string", item);
-    }
-
-    public void check(String support, DataSchema.Item item) {
-        if (support.indexOf(item.type.toString()) == -1) {
-            log.info("generator [{}] not support schema type [{}], item: {}", this, item.type, item);
-            System.exit(-1);
         }
     }
 
@@ -152,6 +159,7 @@ public class Random {
             }
         }
     }
+    protected void cacheUpdate(Object object) {}
 
     protected java.util.Random getRandom() {
         /**
@@ -174,7 +182,9 @@ public class Random {
         Object object = null;
 
         if (objectList != null) {
-            return objectList.get(getIndex(objectList.size()));
+            object = objectList.get(getIndex(objectList.size()));
+            cacheUpdate(object);
+            return object;
         }
 
         switch (item.type) {
@@ -185,7 +195,12 @@ public class Random {
 
             case integer: {
                 object = getLong();
-                item.curr = DataSchema.intSize();
+                item.curr = item.len != 0 ? item.len : DataSchema.longSize();
+            } break;
+
+            case object: {
+                object = getObject(item);
+                item.curr = item.len;
             } break;
 
             default:
@@ -195,6 +210,7 @@ public class Random {
         }
         return object;
     }
+
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -214,6 +230,8 @@ public class Random {
     public Long getLong() {
         return getRandom().nextLong();
     }
+
+    public Object getObject(DataSchema.Item item) { return null; }
     
     public char getChar() {
         final int size = KeyString.length();

@@ -6,15 +6,13 @@ public class Fixed extends Random {
 
     private char[] table_array = null;
 
-    public void set(BaseCommand command) {
-        super.set(command);
-    }
-
     public void set(DataSchema.Item item) {
         check("string", item);
+        assert(item.len != 0);
 
         int len = (item.len + 4096 - 1) / 4096 * 4096;
         if (table_array == null || table_array.length < len) {
+
             table_array = new char[len];
 
             java.util.Random random = new java.util.Random();

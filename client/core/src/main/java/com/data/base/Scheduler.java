@@ -1,8 +1,8 @@
 package com.data.base;
 
 import com.data.bind.AppHandler;
-import com.data.source.DataSource;
-import com.data.source.OutputSource;
+import com.data.util.source.DataSource;
+import com.data.util.source.OutputSource;
 import com.data.util.monitor.MetricTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +32,7 @@ public class Scheduler {
                 || command.type == Command.Type.scan && command.exist("gen.data_path"))
         {
             output = new OutputSource();
+            output.setPath(command.dataPath());
             output.initialize(command);
 
         } else {

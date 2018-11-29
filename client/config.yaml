@@ -20,6 +20,11 @@ global:
   gen:
     seed: 100
         # rand、uuid、seq、table、fix
+    string:
+      gen: random
+    integer:
+      min: 0
+      max: 0
     data_path: test
     output:
       file_count: 10
