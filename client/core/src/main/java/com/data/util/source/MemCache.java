@@ -267,7 +267,7 @@ public class MemCache {
 
         String arglist = String.format("-total %d -thread %d", total, thnum);
         BaseCommand command = new BaseCommand(arglist.split(" "));
-        DataSource.regist(command);
+        command.regist(DataSource.class);
 
         MemCache cache = new MemCache();
         Set<Long> set = new ConcurrentSkipListSet<>();

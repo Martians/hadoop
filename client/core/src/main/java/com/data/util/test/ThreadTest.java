@@ -137,7 +137,7 @@ public class ThreadTest {
         class NewThread extends TThread {
             int data;
 
-            public ThreadTest.TThread newThread() {
+            public TThread newThread() {
                 return new NewThread();
             }
 

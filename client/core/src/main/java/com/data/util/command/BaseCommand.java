@@ -3,6 +3,7 @@ package com.data.util.command;
 import com.data.util.common.Formatter;
 import com.data.util.generator.Random;
 import com.data.util.source.DataSource;
+import com.data.util.sys.Reflect;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,9 +62,9 @@ public class BaseCommand {
     protected String validBind = "";
 
     public class ClientParam {
-        public Long  total = getLong("work.total");
-        public int   thread = getInt("work.thread");
-        public int   batch = Integer.max(getInt("work.batch"), 1);
+        public Long  total = moveLong("work.total");
+        public int   thread = moveInt("work.thread");
+        public int   batch = Integer.max(moveInt("work.batch"), 1);
     }
     public ClientParam param;
 
@@ -100,8 +101,8 @@ public class BaseCommand {
     /**
      * 用于暴露内部执行状态
      */
-    public int step = 0;
-    protected String stepString;
+    public int step = -1;
+    protected String stepString = "";
 
     public void currStep(String str) {
         step++;
@@ -122,6 +123,14 @@ public class BaseCommand {
      * 手动强制设置某个选项
      */
     public void set(String key, Object value) {
+        set(key, value, false);
+    }
+
+    public void set(String key, Object value, boolean force) {
+        if (get(key, false) == null && !force) {
+            log.info("command set [{}], but have no value before", key);
+            System.exit(-1);
+        }
         properties.setProperty(key, value.toString());
     }
 
@@ -187,6 +196,20 @@ public class BaseCommand {
         });
     }
 
+    /**
+     * move option to inner member, should never used by outside through get(), but inner member
+     */
+    protected Long moveLong(String key) {
+        Long data = getLong(key);
+        properties.remove(key);
+        properties.remove(current + "." + key);
+        return data;
+    }
+
+    protected int moveInt(String key) {
+        return moveLong(key).intValue();
+    }
+    
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("\n");
@@ -316,7 +339,7 @@ public class BaseCommand {
     }
 
     protected void allowUnregist(boolean set) {
-        set("strict", set ? "false" : "true");
+        set("strict", set ? "false" : "true", true);
     }
 
     protected boolean allowUnregist() {
@@ -342,6 +365,12 @@ public class BaseCommand {
         addParser("", new Useful());
 
         registParser();
+    }
+
+    public void regist(Class<?> ... args) {
+        for (Class<?> classType : args) {
+            Reflect.call(classType, null, true, "regist", (BaseCommand) this);
+        }
     }
 
     public void addParser(String prefix, BaseOption option) {

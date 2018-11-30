@@ -154,7 +154,7 @@ public class InputSource extends DataSource implements Runnable {
          * command 中设置的 thread 个数，必须大于 thnum
          */
         BaseCommand command = new BaseCommand();
-        DataSource.regist(command);
+        command.regist(DataSource.class);
 
         /**
          * -prefix 选项，只能从配置文件读取，从命令行读取的无效

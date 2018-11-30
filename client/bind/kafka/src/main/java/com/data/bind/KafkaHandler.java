@@ -436,7 +436,7 @@ public class KafkaHandler extends AppHandler {
 
             if (create) {
                 createList.add(new NewTopic(topic,
-                        command.getInt("topic.partition"), (short) command.getInt("table.replica")));
+                        command.getInt("topic.partition"), command.getInt("table.replica").shortValue()));
             }
         }
 

@@ -66,7 +66,7 @@ public class OutputSource implements Runnable {
 
     protected void clearFiles() {
         if (dataPath.isEmpty()) {
-            log.info("load file, but data path empty");
+            log.info("clear file, but data path empty");
             System.exit(-1);
         }
 
@@ -239,15 +239,19 @@ public class OutputSource implements Runnable {
 
         /**
          * thread 参数必须放在命令行，command initialize之后，就不会把thread放到 param.thread 中了
+         *  或者直接修改 command.param.thread
          */
         String arglist = String.format("-thread %d", thnum);
         BaseCommand command = new BaseCommand(arglist.split(" "));
-        DataSource.regist(command);
+        command.regist(DataSource.class);
 
         command.set("gen.data_path", "test");
         command.set("gen.output.file_count", "10");
         command.set("gen.output.file_size", "10M");
-        command.set("gen.output.file_rand", false);
+        /**
+         * 随机和顺序，两种测试
+         */
+        //command.set("gen.output.file_rand", false);
 
         OutputSource output = new OutputSource();
         output.initialize(command, "test");

@@ -3,12 +3,10 @@ package com.data.base;
 import com.data.bind.ClientOption;
 import com.data.util.command.BaseCommand;
 import com.data.util.command.BaseOption;
-import com.data.util.common.Formatter;
 import com.data.util.generator.Random;
 import com.data.util.schema.DataSchema;
 import com.data.util.source.DataSource;
 import com.data.util.source.InputSource;
-import com.data.util.source.MemCache;
 import com.data.util.source.ScanSource;
 import com.data.util.monitor.MetricTracker;
 import com.data.util.sys.ExtClassPathLoader;
@@ -39,7 +37,7 @@ public class Command extends BaseCommand {
     public DataSchema schema = new DataSchema();
 
     public class WorkParam {
-        public int   fetch = getInt("work.fetch");
+        public int   fetch = moveInt("work.fetch");
     }
     public WorkParam workp;
 
@@ -75,8 +73,7 @@ public class Command extends BaseCommand {
         addParser("work",   new ClientOption.Workload());
         addParser("table",  new ClientOption.Table());
 
-        DataSource.regist(this);
-        Random.regist(this);
+        regist(DataSource.class, Random.class);
 
         validBind = "kafka, cassandra, hbase, redis, create";
     }
@@ -231,24 +228,6 @@ public class Command extends BaseCommand {
             String host = getHost();
             set("table.keyspace", host);
         }
-
-        fixSize("gen.output.file_size");
-
-    }
-
-    public void fixSize(String key) {
-
-        Long data = Formatter.parseSize(get(key));
-        if (data < 0) {
-            data = Long.MAX_VALUE;
-        }
-        if (data != null) {
-            set(key, data.toString());
-
-        } else {
-            log.info("fix size, but failed: {}", get(key));
-            System.exit(-1);
-        }
     }
 
     static String getHost() {
@@ -282,7 +261,7 @@ public class Command extends BaseCommand {
 
             currStep(type.toString());
 
-            param.thread = getInt("work.thread");
+            //param.thread = getInt("work.thread");
             if (type == Type.read && exist("gen.data_path")) {
                 int read_thread = getInt("work.read_thread");
                 if (read_thread != 0) {
