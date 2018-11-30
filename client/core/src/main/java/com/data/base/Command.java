@@ -309,7 +309,7 @@ public class Command extends BaseCommand {
 
         } catch (ClassNotFoundException e) {
             if (retry) {
-                log.error("parse class {} failed", name);
+                log.error("parse class {} failed, make sure that bind and dependency in bind/ or lib/", name);
                 System.exit(-1);
 
             } else {
@@ -327,10 +327,18 @@ public class Command extends BaseCommand {
                  * Todo:
                  *      ExtClassPathLoader 增加对 class file 的 load，而不仅仅是 jar
                  **/
+
+                /**
+                 * debug time
+                 */
                 ExtClassPathLoader.loadClasspath("bind/" + bind.toLowerCase() + "/target");
                 ExtClassPathLoader.loadClasspath("main/target/bind/" + bind.toLowerCase());
 
+                /**
+                 * runtime
+                 */
                 ExtClassPathLoader.loadClasspath("lib");
+                ExtClassPathLoader.loadClasspath("bind");
                 return parseClass(bind, suffix, clazz,true);
             }
         }
