@@ -140,7 +140,7 @@ public class Command extends BaseCommand {
         assert(list.size() >= 2);
 
         return String.format("type: [%s] gen <%s %s>, clear: %s",
-                type, list.get(0).gen, list.get(1).gen, get("clear"));
+                type, list.get(0).gen, list.size() > 1 ? list.get(1).gen : "", get("clear"));
     }
 
     /**

@@ -493,10 +493,15 @@ public class KafkaHandler extends AppHandler {
                 return -1;
             }
 
-            if (list.size() == 2) {
+            if (list.size() == 1) {
+                producer.send(new ProducerRecord<>(nextTopic(),
+                        list.get(0).isString() ? (String) wrap.array[0] : wrap.array[0].toString()));
+
+            } else if (list.size() == 2) {
                 producer.send(new ProducerRecord<>(nextTopic(),
                         list.get(0).isString() ? (String) wrap.array[0] : wrap.array[0].toString(),
                         list.get(1).isString() ? (String) wrap.array[1] : wrap.array[1].toString()));
+
             } else {
                 StringBuilder sb = new StringBuilder();
                 for (int index = 1; index < wrap.array.length; index++) {
