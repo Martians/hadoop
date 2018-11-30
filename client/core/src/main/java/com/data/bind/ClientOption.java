@@ -44,7 +44,7 @@ public class ClientOption {
             /**
              * read
              */
-            addOption("read_empty",  "ignore empty updateFromCommandLine", 1000);
+            addOption("read_empty",  "ignore empty command", 1000);
             addOption("dump_select",  "dump select message", false);
 
             //addOption("schema", "table schema", "integer, String(4)[10]<(9)>");

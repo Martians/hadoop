@@ -440,7 +440,7 @@ public class KafkaHandler extends AppHandler {
             }
         }
 
-        /** updateFromCommandLine clear, and not read or scan, then delete all topic */
+        /** command clear, and not read or scan, then delete all topic */
         deleteTopic(deleteList,
                 command.getBool("clear") && !ignore_clear);
 

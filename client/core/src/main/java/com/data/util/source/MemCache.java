@@ -1,6 +1,7 @@
 package com.data.util.source;
 
 import com.data.util.command.BaseCommand;
+import com.data.util.command.BaseOption;
 import com.data.util.test.ThreadTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,15 +12,14 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.data.util.test.ThreadTest.debugThread;
+
 public class MemCache {
     static final Logger log = LoggerFactory.getLogger(MemCache.class);
+    BaseCommand command;
 
-    public static BaseCommand command;
-
-    public MemCache() {}
-
-    public static class BaseOption extends com.data.util.command.BaseOption {
-        public BaseOption() {
+    public static class Option extends BaseOption {
+        public Option() {
             addOption("chunk_size", "cache chunk size", 64);
             addOption("chunk_count", "cache chunk range", 1000000);
         }
@@ -28,29 +28,36 @@ public class MemCache {
     /**
      * 基本配置
      */
-    final int chunkSize = command.getInt("cache.chunk_size");
-    final int lineCached = command.getInt("cache.chunk_count");
-    long dump_time = 30 * 1000000000L;
+    class Config {
+        int thread = command.param.thread;
+        int chunkSize  = command.getInt("cache.chunk_size");
+        int chunkCount = command.getInt("cache.chunk_count");
+        long dump_time = 30 * 1000000000L;
+    }
+    Config config;
 
     /**
      * 保存状态信息
      */
-    int thread;
-    boolean completed;
-    long last = 0L;
-    long total = 0L;
+    class Status {
+        boolean completed;
+        long last = 0L;
+        long total = 0L;
+    }
+    Status status;
 
     /** output 模式使用 */
     protected AtomicInteger finishCounter = new AtomicInteger(0);
 
-    public long getTotal() { return total; }
+    public long getTotal() { return status.total; }
 
-    /** 每个client使用的临时缓冲 */
+    /**
+     * 每个client使用的临时缓冲
+     */
     public static final ThreadLocal<LineChunk> local = new ThreadLocal<LineChunk>();
 
     /**  循环使用的阻塞队列 */
-    public ArrayBlockingQueue<LineChunk> dataList =
-            new ArrayBlockingQueue<>(lineCached / chunkSize);
+    public ArrayBlockingQueue<LineChunk> dataList;
 
     /** 主线程中，用来保存临时数据，组成chunk后加入到队列中 */
     static class LineChunk extends ArrayDeque<String> {
@@ -58,26 +65,33 @@ public class MemCache {
             super(cap);
         }
     }
+    /**
+     * 用于单线程的一方
+     */
     LineChunk current;
 
-    public void initialize(int count) {
-        thread = count;
-        last = 0;
-        total = 0;
-        completed = false;
-        finishCounter.set(0);
-        dataList.clear();
-        current = null;
+    public void initialize(BaseCommand command) {
+        this.command = command;
+
+        config = new Config();
+        status = new Status();
+
+        parseParam();
+    }
+
+    void parseParam() {
+
+        dataList = new ArrayBlockingQueue<>(config.chunkCount / config.chunkSize);
     }
 
     void incTotal() {
-        ++total;
+        ++status.total;
 
-        if (total % 10000 == 0) {
+        if (status.total % 10000 == 0) {
             long time = System.nanoTime();
-            if (time - last >= dump_time) {
-                last = time;
-                log.info("cache status: data handlelist {}, current chunk {} ",
+            if (time - status.last >= config.dump_time) {
+                status.last = time;
+                log.info("cache status: data chunk {}, current chunk {} ",
                         dataList.size(), current.size());
             }
         }
@@ -86,17 +100,17 @@ public class MemCache {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /**
      * 用于从文件中读取，分发到各个thread
-     *      批量写入，单个读取
+     *      单线程 add 到list，多线程从list访问
      */
     public void addInput(String line) {
         if (current == null) {
-            current = new LineChunk(chunkSize);
+            current = new LineChunk(config.chunkSize);
         }
         current.add(line);
 
         incTotal();
 
-        if (current.size() == chunkSize) {
+        if (current.size() == config.chunkSize) {
             moveInput();
         }
     }
@@ -126,7 +140,7 @@ public class MemCache {
                  * 该线程已经收到过了完成通知，但是又再次请求
                  *      这里直接检查，防止阻塞
                  */
-                if (completed && dataList.size() == 0) {
+                if (status.completed && dataList.size() == 0) {
                     log.debug("request again, cache already completed");
                     return null;
                 }
@@ -135,7 +149,7 @@ public class MemCache {
                 /**
                  * 收到了完成通知
                  */
-                if (completed && list.size() == 0) {
+                if (status.completed && list.size() == 0) {
                     local.set(null);
                     log.debug("recv notify, cache already completed");
                     return null;
@@ -154,14 +168,14 @@ public class MemCache {
     public void completeInput() {
         moveInput();
 
-        completed = true;
+        status.completed = true;
         log.info("cache input completed, notify all");
 
         /**
          * 无法用notify方式唤醒，dataList内部有自己的 condition、lock
          *      向每个线程发送一个空list
          */
-        for (int i = 0; i < thread; i++) {
+        for (int i = 0; i < config.thread; i++) {
             try {
                 dataList.put(new LineChunk(0));
 
@@ -174,14 +188,14 @@ public class MemCache {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /**
      * 用于从各个Thread中读取，写入到文件中
-     *      单个写入，批量读取
+     *      多线程add，单线程get
      */
     public void addOutput(String line) {
         LineChunk list = local.get();
-        if (list == null || list.size() == chunkSize) {
+        if (list == null || list.size() == config.chunkSize) {
             moveOutput();
 
-            list = new LineChunk(chunkSize);
+            list = new LineChunk(config.chunkSize);
             local.set(list);
         }
         list.add(line);
@@ -191,7 +205,7 @@ public class MemCache {
         if (current == null || current.size() == 0) {
             try {
                 current = dataList.take();
-                if (completed && current.size() == 0) {
+                if (status.completed && current.size() == 0) {
                     current = null;
                     log.info("cache get output, recv empty size, already completed");
                     return null;
@@ -226,9 +240,9 @@ public class MemCache {
     public void completeOutput() {
         moveOutput();
 
-        if (finishCounter.addAndGet(1) == thread) {
-            completed = true;
-            log.debug("client complete output, range {}", thread);
+        if (finishCounter.addAndGet(1) == config.thread) {
+            status.completed = true;
+            log.debug("client complete output, range {}", config.thread);
 
             try {
                 dataList.put(new LineChunk(0));
@@ -237,39 +251,32 @@ public class MemCache {
                 log.warn("complete output err, {}", e);
             }
         } else {
-            log.info("complete output, thread {}, total {}", finishCounter.get(), thread);
+            if (finishCounter.get() > config.thread) {
+                log.info("thread complete output, but complete {} exceed total {}", finishCounter.get(), config.thread);
+                System.exit(-1);
+
+            } else {
+                log.info("thread complete output, complete {}/{}", finishCounter.get(), config.thread);
+            }
         }
     }
 
     public static void main(String[] args) {
-        BaseCommand command = new BaseCommand("".split(" "));
-        MemCache.command = command;
+        int  thnum = 25;
+        long total = 1000000;
+
+        String arglist = String.format("-total %d -thread %d", total, thnum);
+        BaseCommand command = new BaseCommand(arglist.split(" "));
+        DataSource.regist(command);
 
         MemCache cache = new MemCache();
         Set<Long> set = new ConcurrentSkipListSet<>();
         ThreadTest test;
 
-        int  thnum = 25;
-        long total = 1000000;
-
+        //debugThread();
         //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        cache.initialize(thnum);
+        cache.initialize(command);
         set.clear();
-
-        /** 用于断点检测的线程 */
-        //Thread t = new Thread(new Runnable() {
-        //    @Override
-        //    public void run() {
-        //        while (true) {
-        //            try {
-        //                Thread.sleep(1000);
-        //            } catch (InterruptedException e) {
-        //                e.printStackTrace();
-        //            }
-        //        }
-        //    }
-        //});
-        //t.start();
 
         class Worker1 extends ThreadTest.TThread {
             MemCache cache;
@@ -311,10 +318,10 @@ public class MemCache {
         test = new ThreadTest();
         test.start(new Worker1(), thnum, total, cache, set, "input cache");
         test.dump();
-        log.info("size: {}, {}", set.size(), set.size() != total ? "not match!" : "updateFromCommandLine good");
+        log.info("size: {}, {}", set.size(), set.size() != total ? "not match!" : "command good");
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-        cache.initialize(thnum);
+        cache.initialize(command);
         set.clear();
 
         class Worker2 extends ThreadTest.TThread {
@@ -364,6 +371,6 @@ public class MemCache {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        log.info("size: {}, {}", set.size(), set.size() != total ? "not match!" : "updateFromCommandLine good");
+        log.info("size: {}, {}", set.size(), set.size() != total ? "not match!" : "command good");
     }
 }

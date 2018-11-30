@@ -13,6 +13,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 
+import static com.data.util.test.ThreadTest.debugThread;
+
 public class OutputSource implements Runnable {
 
     static final Logger log = LoggerFactory.getLogger(OutputSource.class);
@@ -28,6 +30,9 @@ public class OutputSource implements Runnable {
     int index = 0;
     long maxSize;
 
+    List<OutputHandler> handlelist = new ArrayList<>();
+    Set<Integer> randSet = new HashSet<>();
+
     long total_size;
     long total_line;
 
@@ -38,8 +43,6 @@ public class OutputSource implements Runnable {
         dataPath = path;
 
         parseParam();
-
-        clearFiles();
 
         prepare();
 
@@ -72,16 +75,20 @@ public class OutputSource implements Runnable {
     }
 
     protected void prepare() {
-        cache.command = command;
+        clearFiles();
+
         cache = new MemCache();
-        cache.initialize(command.getInt("work.thread"));
+        cache.initialize(command);
 
         if (randWrite) {
             int count = command.getInt("gen.output.file_count");
-            List<OutputHandler> list = new ArrayList<>();
+            count = Math.max(1, count);
+
             for (int i = 0; i < count; i++) {
-                list.add(nextFile(createRandIndex()));
+                handlelist.add(nextFile(createRandIndex()));
             }
+        } else {
+            handlelist.add(nextFile(0));
         }
     }
 
@@ -94,8 +101,6 @@ public class OutputSource implements Runnable {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    List<OutputHandler> handlelist = new ArrayList<>();
-    Set<Integer> randSet = new HashSet<>();
 
     class OutputHandler {
         BufferedWriter writer;
@@ -138,8 +143,6 @@ public class OutputSource implements Runnable {
                     Formatter.formatSize(command.getInt("gen.output.file_size")));
             System.exit(-1);
         }
-
-        randSet.add(index);
         return index;
     }
 
@@ -152,6 +155,7 @@ public class OutputSource implements Runnable {
             out.name = name;
             out.size = 0;
 
+            randSet.add(index);
             log.info("next file: {}", name);
             return out;
 
@@ -233,18 +237,22 @@ public class OutputSource implements Runnable {
         int  thnum = 10;
         long total = 10000000L;
 
-        String arglist = "";
+        /**
+         * thread 参数必须放在命令行，command initialize之后，就不会把thread放到 param.thread 中了
+         */
+        String arglist = String.format("-thread %d", thnum);
         BaseCommand command = new BaseCommand(arglist.split(" "));
         DataSource.regist(command);
 
         command.set("gen.data_path", "test");
         command.set("gen.output.file_count", "10");
-        command.set("gen.output.file_size", "1M");
-        command.set("work.thread", Integer.toString(thnum));
-        //command.fixSize("gen.output.file_size");
+        command.set("gen.output.file_size", "10M");
+        command.set("gen.output.file_rand", false);
 
         OutputSource output = new OutputSource();
         output.initialize(command, "test");
+
+        //debugThread();
 
         class Worker extends ThreadTest.TThread {
             OutputSource output;
@@ -276,7 +284,6 @@ public class OutputSource implements Runnable {
         ThreadTest test = new ThreadTest();
         test.start(new Worker(), thnum, total, output, "output cache");
         test.dump();
-        //debugThread();
 
         try {
             output.waitThread();

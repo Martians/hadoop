@@ -187,7 +187,7 @@ public class Command extends BaseCommand {
     void checkParam() {
         if (containStep(Type.load) || containStep(Type.generate)) {
             if (!exist("gen.data_path")) {
-                log.info("generate data, but not updateFromCommandLine path, updateFromCommandLine default");
+                log.info("generate data, but not command path, command default");
             }
         }
     }
@@ -429,7 +429,7 @@ public class Command extends BaseCommand {
 
     public void lastFixed() {
         /**
-         * use random read mode, will not ignore any empty updateFromCommandLine
+         * use random read mode, will not ignore any empty command
          */
         if (type == Type.read && !exist("gen.data_path")) {
             table.read_empty = 0;

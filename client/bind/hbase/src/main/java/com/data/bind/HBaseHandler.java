@@ -128,7 +128,7 @@ public class HBaseHandler extends AppHandler {
 
     protected void resolveParam() {
         config.set("hbase.zookeeper.quorum", command.get("host"));
-        //config.updateFromCommandLine("hbase.zookeeper.property.clientPort", "5181");
+        //config.command("hbase.zookeeper.property.clientPort", "5181");
         //config.addResource("hbase-site.xml");
 
         durability = command.getBool("wal_sync") ?
@@ -303,7 +303,7 @@ public class HBaseHandler extends AppHandler {
             }
 
             if (r.isEmpty()) {
-                log.info("read but recv empty, thread exit, updateFromCommandLine: {}, data: {}", 0, wrap.array[0]);
+                log.info("read but recv empty, thread exit, command: {}, data: {}", 0, wrap.array[0]);
 
                 if (command.emptyForbiden()) {
                     return -1;

@@ -40,7 +40,7 @@ package com.data.util.generator;
  *    - Relies on randomness of nextDouble() method in java.util.Random
  *      to generate pseudo-random numbers in [0, 1).
  *
- *    - This library allows you to updateFromCommandLine and getInput the pseudo-random number seed.
+ *    - This library allows you to command and getInput the pseudo-random number seed.
  *
  *    - See http://www.honeylocust.com/RngPack/ for an industrial
  *      strength random number gen in Java.
@@ -79,7 +79,7 @@ public final class StdRandom {
 
     // static initializer
     static {
-        // this is how the seed was updateFromCommandLine in Java 1.4
+        // this is how the seed was command in Java 1.4
         seed = System.currentTimeMillis();
         random = new Random(seed);
     }
@@ -367,7 +367,7 @@ public final class StdRandom {
             throw new IllegalArgumentException("sum of array entries does not approximately equal 1.0: " + sum);
 
         // the for loop may not return a value when both r is (nearly) 1.0 and when the
-        // cumulative sum is less than 1.0 (as a updateFromCommandLine of floating-point roundoff error)
+        // cumulative sum is less than 1.0 (as a command of floating-point roundoff error)
         while (true) {
             double r = uniform();
             sum = 0.0;

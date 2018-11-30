@@ -1,6 +1,7 @@
 package com.data.util.source;
 
 import com.data.util.command.BaseCommand;
+import com.data.util.command.BaseOption;
 import com.data.util.common.Formatter;
 import com.data.util.schema.DataSchema;
 import org.slf4j.Logger;
@@ -24,9 +25,20 @@ public class DataSource {
      */
     private AtomicLong total = new AtomicLong(0);
 
+    public static class Option extends BaseOption {
+        protected void initialize() {
+            addOption("data_path", "data file path; if setted, output[generate、scan], input[load、read]", "");
+
+            addOption("output.file_count", "min output file count", 1);
+            addOption("output.file_size", "output file size (M)", "-1");
+            addOption("output.file_rand", "random write to multi file", true);
+        }
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     public static void regist(BaseCommand command) {
-        command.addParser("cache",  new MemCache.BaseOption());
+        command.addParser("gen",  new Option());
+        command.addParser("cache",  new MemCache.Option());
     }
 
     public void initialize(BaseCommand command, DataSchema schema, String path) {
@@ -111,7 +123,7 @@ public class DataSource {
             array[i] = item.gen.get(item);
 
             /**
-             * if use sequence, every thread load command.param.total/thread
+             * if use sequence, every totalThread load command.param.total/totalThread
              */
             if (array[i] == null) {
                 return null;

@@ -137,7 +137,7 @@ public class Table extends Random {
                 Long start = total * index;
                 for (long i = 0; i < total; i++) {
                     String line = generator.getString(size);
-                    //if (!updateFromCommandLine.add(line.hashCode() + line.substring(0, 4))) {
+                    //if (!command.add(line.hashCode() + line.substring(0, 4))) {
                     //    conflict.incrementAndGet();
                     //}
                     count++;

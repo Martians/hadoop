@@ -35,15 +35,17 @@ public class InputSource extends DataSource implements Runnable {
     public void initialize(BaseCommand command, DataSchema schema, String path) {
         super.initialize(command, schema, path);
 
-        cache.command = command;
-
-        cache = new MemCache();
-        cache.initialize(command.param.thread);
-
-        loadFiles();
+        prepare();
 
         thread = new Thread(this, "input source");
         thread.start();
+    }
+
+    void prepare() {
+        cache = new MemCache();
+        cache.initialize(command);
+
+        loadFiles();
     }
 
     @Override
@@ -134,7 +136,7 @@ public class InputSource extends DataSource implements Runnable {
         cache.completeInput();
 
         log.info("load file complete, total line: [{}], size: [{}]",
-                Formatter.formatIOPS(cache.total), Formatter.formatSize(fileTotalSize));
+                Formatter.formatIOPS(cache.getTotal()), Formatter.formatSize(fileTotalSize));
     }
 
     @Override
@@ -161,11 +163,7 @@ public class InputSource extends DataSource implements Runnable {
         command.set("gen.data_path", "test");
         command.initialize(arglist.split(" "));
 
-        try {
-            Files.createDirectories(Paths.get(command.get("gen.data_path")));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        Disk.deletePath(command.get("gen.data_path"), "");
         Path p = Paths.get( command.get("gen.data_path") + "/file.csv");
 
         /**

@@ -2,6 +2,7 @@ package com.data.util.command;
 
 import com.data.util.common.Formatter;
 import com.data.util.generator.Random;
+import com.data.util.source.DataSource;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -163,9 +164,7 @@ public class BaseCommand {
             return Formatter.parseSize(data);
         }
     }
-    public Integer getInt(String key) {
-        return Integer.parseInt(get(key));
-    }
+    public Integer getInt(String key) { return getLong(key).intValue(); }
 
     /**
      * 注册时，bool 设置为0，或者"false"都可以; 最终会用 Boolean.valueOf 解析

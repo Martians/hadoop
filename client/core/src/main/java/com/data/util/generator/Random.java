@@ -45,11 +45,6 @@ public class Random {
         protected void initialize() {
             addOption("seed",  "random seed",0);
 
-            addOption("data_path", "data file path; if setted, output[generate、scan], input[load、read]", "");
-            addOption("output.file_count", "min output file count", 1);
-            addOption("output.file_size", "output file size (M)", "-1");
-            addOption("output.file_rand", "random write to multi file", true);
-
             addOption("integer.gen",  "integer generator","numeric");
             addOption("integer.min",  "integer default min value", 0);
             addOption("integer.max",  "integer defautl max value",0);
@@ -124,7 +119,7 @@ public class Random {
     }
 
     /**
-     * every thread updateFromCommandLine different seed
+     * every thread command different seed
      */
     public void threadPrepare(int index) {
         threadIndex = index;

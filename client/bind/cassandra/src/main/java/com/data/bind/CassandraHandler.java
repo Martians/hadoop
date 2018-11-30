@@ -310,7 +310,7 @@ public class CassandraHandler extends AppHandler {
             }
 
             ResultSet results = session.execute(state);
-//            List<Row> pathList = updateFromCommandLine.all();
+//            List<Row> pathList = command.all();
 //            if (pathList.size() != 1) {
 //                log.error("write failed");
 //                System.exit(-1);
@@ -339,7 +339,7 @@ public class CassandraHandler extends AppHandler {
             if (output != null) {
                 output.add(sb.toString());
             } else {
-                log.info("updateFromCommandLine: {}", sb.toString());
+                log.info("command: {}", sb.toString());
             }
         }
     }
@@ -378,7 +378,7 @@ public class CassandraHandler extends AppHandler {
                     String data = formatArray((Object[]) preserve[0]);
                     //LoggerFactory.getLogger("data").info(data);
 
-                    log.info("read but recv empty, thread exit, updateFromCommandLine: {}, data: {}",
+                    log.info("read but recv empty, thread exit, command: {}, data: {}",
                             results.getAvailableWithoutFetching(), data);
 
                     if (command.emptyForbiden()) {
@@ -449,7 +449,7 @@ public class CassandraHandler extends AppHandler {
                     break;
                 }
                 array[0] = currentToken;
-                //log.info("{}, {}", updateFromCommandLine[0], array[0]);
+                //log.info("{}, {}", command[0], array[0]);
 
             } catch (Exception e) {
                 log.error("scan failed, {}", e);
@@ -463,8 +463,8 @@ public class CassandraHandler extends AppHandler {
             }
             //checkResult(success, result, start);
 
-            //if (updateFromCommandLine[1] < command.param.scan_limit) {
-            //    log.info("get updateFromCommandLine: {}, less than required: {}", updateFromCommandLine[1], command.param.scan_limit);
+            //if (command[1] < command.param.scan_limit) {
+            //    log.info("get command: {}, less than required: {}", command[1], command.param.scan_limit);
             //    break;
             //}
         }
