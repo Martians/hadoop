@@ -3,11 +3,11 @@ package com.data.base;
 import com.data.bind.ClientOption;
 import com.data.util.command.BaseCommand;
 import com.data.util.command.BaseOption;
-import com.data.util.generator.Random;
+import com.data.util.data.generator.Random;
 import com.data.util.schema.DataSchema;
-import com.data.util.source.DataSource;
-import com.data.util.source.InputSource;
-import com.data.util.source.ScanSource;
+import com.data.util.data.source.DataSource;
+import com.data.util.data.source.InputSource;
+import com.data.util.data.source.ScanSource;
 import com.data.util.monitor.MetricTracker;
 import com.data.util.sys.ExtClassPathLoader;
 import com.data.bind.AppHandler;
@@ -69,9 +69,9 @@ public class Command extends BaseCommand {
 
     @Override
     protected void registParser() {
-        addParser("",       new ClientOption.Global());
-        addParser("work",   new ClientOption.Workload());
-        addParser("table",  new ClientOption.Table());
+        regist("",       new ClientOption.Global());
+        regist("work",   new ClientOption.Workload());
+        regist("table",  new ClientOption.Table());
 
         regist(DataSource.class, Random.class);
 
@@ -179,6 +179,7 @@ public class Command extends BaseCommand {
     void parseSchema() {
         schema.set(this);
         schema.initialize(get("table.schema"));
+        schema.dump();
     }
 
     void checkParam() {
@@ -203,9 +204,9 @@ public class Command extends BaseCommand {
     }
 
     public boolean emptyForbiden() {
-        if (MetricTracker.incData(0) >= table.read_empty) {
+        if (MetricTracker.incLocal(0) >= table.read_empty) {
             //System.exit(-1);
-            log.info("read empty exceed: {}, thread exit", MetricTracker.getData(0));
+            log.info("read empty exceed: {}, thread exit", MetricTracker.getLocal(0));
             return true;
 
         } else {
@@ -289,7 +290,7 @@ public class Command extends BaseCommand {
         appHandlerFactory = parseClass(bind,"Handler", AppHandler.class, false);
 
         BaseOption option = createOptionParser(bind);
-        addParser(bind, option);
+        regist(bind, option);
     }
 
     Class<?> parseClass(String bind, String suffix, Class<?> clazz, Boolean retry) {

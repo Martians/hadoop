@@ -1,4 +1,4 @@
-package com.data.util.source;
+package com.data.util.data.source;
 
 import com.data.util.command.BaseCommand;
 import com.data.util.common.Formatter;
@@ -12,8 +12,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
-
-import static com.data.util.test.ThreadTest.debugThread;
 
 public class OutputSource implements Runnable {
 

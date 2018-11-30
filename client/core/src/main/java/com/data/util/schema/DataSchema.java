@@ -1,7 +1,8 @@
 package com.data.util.schema;
 
 import com.data.util.command.BaseCommand;
-import com.data.util.generator.Random;
+import com.data.util.common.Formatter;
+import com.data.util.data.generator.Random;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -191,6 +192,9 @@ public class DataSchema {
                 parse(value.toLowerCase());
             }
         }
+    }
+
+    public void dump() {
         log.info("{}", this);
     }
 
@@ -232,19 +236,19 @@ public class DataSchema {
          *      integer(11, 56 / 29)
          *      integer( 11 , 56 / 29 )
          */
-        String rangePartten = "\\((\\W*(\\d+)\\W*,\\W*)?(\\d+)(\\W*/\\W*(\\d+))?\\W*\\)";
+        String rangePartten = "\\((\\W*(\\d+)\\W*,\\W*)?(\\d+)(\\W*/\\W*(\\w+))?\\W*\\)";
         pattern = Pattern.compile(rangePartten);
         match = pattern.matcher(line);
         if (match.find()) {
             if (match.group(2) != null) {
-                item.min = Long.valueOf(match.group(2));
+                item.min = Formatter.parseLong(match.group(2));
             }
             if (match.group(3) != null) {
-                item.max = Long.valueOf(match.group(3));
+                item.max = Formatter.parseLong(match.group(3));
             }
 
             if (match.group(5) != null) {
-                item.count = Long.valueOf(match.group(5));
+                item.count = Formatter.parseLong(match.group(5));
             }
         }
 

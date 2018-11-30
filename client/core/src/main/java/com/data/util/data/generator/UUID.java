@@ -1,4 +1,4 @@
-package com.data.util.generator;
+package com.data.util.data.generator;
 import com.data.util.schema.DataSchema;
 
 public class UUID extends Random {

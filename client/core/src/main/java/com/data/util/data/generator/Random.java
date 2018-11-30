@@ -1,4 +1,4 @@
-package com.data.util.generator;
+package com.data.util.data.generator;
 
 import com.data.util.command.BaseCommand;
 import com.data.util.command.BaseOption;
@@ -38,7 +38,7 @@ public class Random {
     List<Object> objectList;
 
     public static void regist(BaseCommand command) {
-        command.addParser("gen", new Option());
+        command.regist("gen", new Option());
     }
 
     public static class Option extends BaseOption {

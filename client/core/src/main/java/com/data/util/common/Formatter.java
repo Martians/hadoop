@@ -6,6 +6,15 @@ import java.util.regex.Pattern;
 
 public class Formatter {
 
+    public static Long parseLong(String valud) {
+        if (isNumeric(valud)) {
+            return Long.parseLong(valud);
+
+        } else {
+            return parseSize(valud);
+        }
+    }
+
     public static boolean isNumeric(String str) {
         for (int i = 0; i < str.length(); i++) {
             if (!Character.isDigit(str.charAt(i))) {

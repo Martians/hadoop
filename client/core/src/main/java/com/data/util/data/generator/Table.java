@@ -1,4 +1,4 @@
-package com.data.util.generator;
+package com.data.util.data.generator;
 
 import com.data.util.command.BaseCommand;
 import com.data.util.common.Formatter;
@@ -112,7 +112,7 @@ public class Table extends Random {
     }
 
     /**
-     * java -classpath client-0.0.1-SNAPSHOT.jar com.data.util.source.Table 4096
+     * java -classpath client-0.0.1-SNAPSHOT.jar com.data.util.data.source.Table 4096
      */
     public static void main(String[] args) {
         BaseCommand command = new BaseCommand("".split(""));

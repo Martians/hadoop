@@ -67,7 +67,7 @@ kafka:
   clear: false
 
   table:
-    schema: integer, string(10/1000000) {3}
+    schema: integer, string(10/1000) {3}
     replica: 1
 
   work:

@@ -1,4 +1,4 @@
-package com.data.util.source;
+package com.data.util.data.source;
 
 import com.data.util.command.BaseCommand;
 import com.data.util.command.BaseOption;
@@ -37,8 +37,8 @@ public class DataSource {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     public static void regist(BaseCommand command) {
-        command.addParser("gen",  new Option());
-        command.addParser("cache",  new MemCache.Option());
+        command.regist("gen",  new Option());
+        command.regist("cache",  new MemCache.Option());
     }
 
     public void initialize(BaseCommand command, DataSchema schema, String path) {

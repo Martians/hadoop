@@ -1,9 +1,9 @@
-package com.data.util.source;
+package com.data.util.data.source;
 
 import com.data.util.command.BaseCommand;
 import com.data.util.common.Formatter;
 import com.data.util.disk.Disk;
-import com.data.util.generator.Random;
+import com.data.util.data.generator.Random;
 import com.data.util.schema.DataSchema;
 import com.data.util.test.ThreadTest;
 import org.slf4j.Logger;
@@ -11,13 +11,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
-
-import static com.data.util.test.ThreadTest.debugThread;
 
 /**
  * 不需要使用cache的notify功能，获取数据时访问到null，即表明数据已经取完

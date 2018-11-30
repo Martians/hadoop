@@ -1,4 +1,4 @@
-package com.data.util.generator;
+package com.data.util.data.generator;
 
 /******************************************************************************
  *  Compilation:  javac StdRandom.java

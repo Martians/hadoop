@@ -1,5 +1,4 @@
-package com.data.util.generator;
-import com.data.util.command.BaseCommand;
+package com.data.util.data.generator;
 import com.data.util.schema.DataSchema;
 
 public class Fixed extends Random {

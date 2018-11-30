@@ -1,4 +1,4 @@
-package com.data.util.source;
+package com.data.util.data.source;
 
 import com.data.util.command.BaseCommand;
 import com.data.util.command.BaseOption;
@@ -11,8 +11,6 @@ import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static com.data.util.test.ThreadTest.debugThread;
 
 public class MemCache {
     static final Logger log = LoggerFactory.getLogger(MemCache.class);

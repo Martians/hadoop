@@ -11,7 +11,7 @@ public class MetricTracker extends Thread {
     public static MetricTracker tracker;
     static final ThreadLocal<long[]> local = new ThreadLocal<>();
 
-    static public long incData(int index) {
+    static public long incLocal(int index) {
         long[] array = local.get();
         if (array == null) {
             array = new long[8];
@@ -20,7 +20,7 @@ public class MetricTracker extends Thread {
         return ++array[index];
     }
 
-    static public long getData(int index) {
+    static public long getLocal(int index) {
         long[] array = local.get();
         if (array == null) {
             array = new long[8];
@@ -29,9 +29,7 @@ public class MetricTracker extends Thread {
         return array[index];
     }
 
-
     Object initLock = new Object();
-    Metric total = new Metric();
 
     static Metric[] array;
     long time;
@@ -111,7 +109,6 @@ public class MetricTracker extends Thread {
         long elapse = System.nanoTime() - time;
 
         log.info(typeMetric(command.step, elapse, last));
-
     }
 
     String typeMetric(int index, long elapse, boolean last) {

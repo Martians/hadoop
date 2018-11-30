@@ -1,8 +1,6 @@
 package com.data.util.command;
 
 import com.data.util.common.Formatter;
-import com.data.util.generator.Random;
-import com.data.util.source.DataSource;
 import com.data.util.sys.Reflect;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
@@ -164,15 +162,7 @@ public class BaseCommand {
         return !get(key).isEmpty();
     }
 
-    public Long getLong(String key) {
-        String data = get(key);
-
-        if (Formatter.isNumeric(data)) {
-            return Long.parseLong(data);
-        } else {
-            return Formatter.parseSize(data);
-        }
-    }
+    public Long getLong(String key) { return Formatter.parseLong(get(key)); }
     public Integer getInt(String key) { return getLong(key).intValue(); }
 
     /**
@@ -361,8 +351,8 @@ public class BaseCommand {
      * 将多个配置参数分开存放
      */
     protected void construct() {
-        addParser("", new Common());
-        addParser("", new Useful());
+        regist("", new Common());
+        regist("", new Useful());
 
         registParser();
     }
@@ -373,7 +363,7 @@ public class BaseCommand {
         }
     }
 
-    public void addParser(String prefix, BaseOption option) {
+    public void regist(String prefix, BaseOption option) {
         /** reset option current */
         if (option.getPrefix().length() == 0) {
             option.setPrefix(prefix);
