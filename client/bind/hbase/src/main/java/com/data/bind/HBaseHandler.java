@@ -39,8 +39,8 @@ import java.util.ConcurrentModificationException;
 public class HBaseHandler extends AppHandler {
     final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    public static class BaseOption extends com.data.util.command.BaseOption {
-        public BaseOption() {
+    public static class Option extends com.data.util.command.BaseOption {
+        public Option() {
             /**
              * Hbase
              */

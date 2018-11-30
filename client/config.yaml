@@ -79,6 +79,7 @@ kafka:
   topic:
     name: test
     count: 1
+    replica: 1
     partition: 5
     loop: 10000
 

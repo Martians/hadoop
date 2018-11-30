@@ -46,8 +46,8 @@ import java.util.concurrent.Semaphore;
 public class RedisHandler extends AppHandler {
     final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    public static class BaseOption extends com.data.util.command.BaseOption {
-        public BaseOption() {
+    public static class Option extends com.data.util.command.BaseOption {
+        public Option() {
             /** 不需要专门设置，command中会将prefix设置为bind */
             //setPrefix("kafka");
 

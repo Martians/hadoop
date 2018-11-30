@@ -355,7 +355,7 @@ public class Command extends BaseCommand {
     }
 
     BaseOption createOptionParser(String bind) {
-        Class<?> factory = parseClass(bind, "Handler$BaseOption", BaseOption.class, false);
+        Class<?> factory = parseClass(bind, "Handler$Option", BaseOption.class, false);
 
         try {
             BaseOption option = (BaseOption)factory.newInstance();

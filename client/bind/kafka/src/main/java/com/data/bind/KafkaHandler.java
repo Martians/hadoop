@@ -59,8 +59,8 @@ public class KafkaHandler extends AppHandler {
      *      schema: 只有前两项其效果；如果不是string，发送之前将执行 toString
      *      batch：每执行一个batch，就切换到下一个topic
      */
-    public static class BaseOption extends com.data.util.command.BaseOption {
-        public BaseOption() {
+    public static class Option extends com.data.util.command.BaseOption {
+        public Option() {
             /** 不需要专门设置，command中会将prefix设置为bind */
             //setPrefix("kafka");
 
@@ -79,6 +79,7 @@ public class KafkaHandler extends AppHandler {
 
             addOption("topic.name",  "topic name", "test");
             addOption("topic.count",  "topic count", 1);
+			addOption("topic.replica",  "topic replica", 1);
             addOption("topic.partition",  "topic partition", 5);
 
             //addOption("command",  "only-once command", false);
@@ -113,8 +114,8 @@ public class KafkaHandler extends AppHandler {
             Collection<Node> list = result.nodes().get();
             list.stream().forEach(v -> log.info("\t\t node: " + v));
 
-            if (list.size() < command.getInt("table.replica")) {
-                log.info("get kafka cluster info, node count <{}> lower than replica count <{}>", list.size(), command.getInt("table.replica"));
+            if (list.size() < command.getInt("topic.replica")) {
+                log.info("get kafka cluster info, node count <{}> lower than replica count <{}>", list.size(), command.getInt("topic.replica"));
                 System.exit(-1);
             }
 
@@ -436,7 +437,7 @@ public class KafkaHandler extends AppHandler {
 
             if (create) {
                 createList.add(new NewTopic(topic,
-                        command.getInt("topic.partition"), command.getInt("table.replica").shortValue()));
+                        command.getInt("topic.partition"), command.getInt("topic.replica").shortValue()));
             }
         }
 

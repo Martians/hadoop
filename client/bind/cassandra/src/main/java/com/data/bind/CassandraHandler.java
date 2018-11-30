@@ -25,8 +25,8 @@ import static com.data.base.Command.Type.scan;
 public class CassandraHandler extends AppHandler {
     final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    public static class BaseOption extends com.data.util.command.BaseOption {
-        public BaseOption() {
+    public static class Option extends com.data.util.command.BaseOption {
+        public Option() {
             addOption("sub_bind",  "working bind sub type", "");
 
             addOption("conn_min",  "min conn per host", 16);
