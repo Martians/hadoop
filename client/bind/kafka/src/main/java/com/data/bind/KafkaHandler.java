@@ -429,7 +429,7 @@ public class KafkaHandler extends AppHandler {
 
                 } else {
                     log.info("topic [{}] already exist", topic);
-                    log.info("\t\t\t{}", descTopic(topic));
+                    //log.info("\t\t\t{}", descTopic(topic));
                 }
             } else {
                 create = true;
