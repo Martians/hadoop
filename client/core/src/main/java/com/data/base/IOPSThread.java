@@ -45,6 +45,19 @@ public class IOPSThread extends Thread {
         return local.get();
     }
 
+    protected int nextLoop(int complete, int fetched) {
+        if (complete < fetched) {
+            fetched -= complete;
+
+            if (fetched < complete) {
+                fetched = source.nextWork(command.workp.fetch - fetched) + fetched;
+            }
+        } else {
+            fetched = source.nextWork(command.workp.fetch);
+        }
+        return fetched;
+    }
+
     @Override
     public void run() {
         initialize();
@@ -59,15 +72,7 @@ public class IOPSThread extends Thread {
                  * 上一次取得的任务尚未完成，继续执行
                  *      不再从source中后去任务数，source的总个数是一定的，取走了就没有了
                  */
-                if (success[0] < fetched) {
-                    fetched -= success[0];
-
-                    if (fetched < success[0]) {
-                        fetched = source.nextWork(command.workp.fetch - fetched) + fetched;
-                    }
-                } else {
-                    fetched = source.nextWork(command.workp.fetch);
-                }
+                fetched = nextLoop(success[0], fetched);
                 success[2] = command.speedLimit(fetched);
 
                 /**

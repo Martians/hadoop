@@ -8,10 +8,8 @@ import org.apache.ignite.Ignition;
 import org.apache.ignite.cache.CacheMode;
 import org.apache.ignite.client.ClientCache;
 import org.apache.ignite.client.IgniteClient;
-import org.apache.ignite.client.SslMode;
 import org.apache.ignite.configuration.CacheConfiguration;
 import org.apache.ignite.configuration.ClientConfiguration;
-import org.apache.ignite.ssl.SslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +22,11 @@ import java.util.List;
  *      1. 使用 examples/config/example-cache.xml 作为模板，修改ip地址
  *      2. <property name="peerClassLoadingEnabled" value="true"/>
  *
- * 两种模式：
+ * 两种client
+ *      1. thin：访问端口与normal client不同，默认10800
+ *      2. normal：必须指定配置文件
+ *
+ * 两种模式：（normal client下）
  *      1. client模式：数据发送到远端server
  *              1）远端服务启动：bin/ignite.sh examples/config/example-cache.xml，配置文件同本地
  *              2）本地 setClientMode 设置为 true
@@ -41,6 +43,9 @@ public class IgniteHandler extends AppHandler {
         public Option() {
             addOption("client", "client or server", false);
             addOption("file", "server config file", "example-cache.xml");
+
+            addOption("thin.open", "use thin client", true);
+            addOption("thin.host", "thin client host", "");
         }
     }
 
@@ -50,7 +55,7 @@ public class IgniteHandler extends AppHandler {
      * thin client
      */
     IgniteClient thinClient;
-    ClientCache<String, String> thinClientCache;
+    ClientCache<String, String>  thinClientCache;
 
     /**
      * normal
@@ -71,7 +76,20 @@ public class IgniteHandler extends AppHandler {
     }
 
     protected void connecting() {
-        if (true) {
+        if (command.getBool("thin.open")) {
+            /**
+             * thin client模式
+             *  https://www.cnblogs.com/peppapigdaddy/archive/2018/11/12/9815848.html
+             *      https://apacheignite.readme.io/docs/java-thin-client
+             *      https://apacheignite.readme.io/docs/ssltls
+             */
+            String[] servers = command.get("thin.host").split(",");
+            ClientConfiguration cfg = new ClientConfiguration().setAddresses(servers);
+
+            thinClient = Ignition.startClient(cfg);
+            thinClientCache = thinClient.getOrCreateCache(cacheName);
+
+        } else {
             Ignition.setClientMode(command.getBool("client"));
 
             ignite = Ignition.start(command.get("file"));
@@ -82,33 +100,6 @@ public class IgniteHandler extends AppHandler {
 
             cache = ignite.getOrCreateCache(cfg);
             log.info("connecting complete");
-
-        } else {
-            /**
-             * thin client模式，以下尝试都没有成功；似乎必须配置ssl相关内容
-             *      https://apacheignite.readme.io/docs/java-thin-client
-             *      https://apacheignite.readme.io/docs/ssltls
-             */
-            String[] servers = command.get("host").split(",");
-            ClientConfiguration cfg = new ClientConfiguration().setAddresses(servers);
-
-            //cfg.setSslMode(SslMode.REQUIRED)
-            //        .setSslClientCertificateKeyStorePath("client.jks")
-            //        .setSslClientCertificateKeyStoreType("JKS")
-            //        .setSslClientCertificateKeyStorePassword("123456")
-            //        .setSslTrustCertificateKeyStorePath("trust.jks")
-            //        .setSslTrustCertificateKeyStoreType("JKS")
-            //        .setSslTrustCertificateKeyStorePassword("123456")
-            //        .setSslKeyAlgorithm("SunX509")
-            //        .setSslTrustAll(false)
-            //        .setSslProtocol(SslProtocol.TLS);
-            SslContextFactory factory = new SslContextFactory();
-            factory.setTrustManagers(SslContextFactory.getDisabledTrustManager());
-            cfg.setSslContextFactory(factory);
-            cfg.setSslTrustAll(true).setSslMode(SslMode.DISABLED);
-
-            thinClient = Ignition.startClient(cfg);
-            thinClientCache = thinClient.getOrCreateCache(cacheName);
         }
     }
 
@@ -144,7 +135,7 @@ public class IgniteHandler extends AppHandler {
                 log.debug("write get null, completed");
                 return -1;
             }
-            cache.put((String)wrap.array[0], (String)wrap.array[1]);
+            thinClientCache.put((String)wrap.array[0], (String)wrap.array[1]);
 
             result[0] += 1;
             result[1] += wrap.size;

@@ -128,9 +128,12 @@ redis:
 
 ---
 ignite:
-  host: 192.168.0.80:47500
   client: true
   file: example-cache.xml
+
+  thin:
+    open: true
+    host: 192.168.0.80:10800
 
   table:
     schema: String(10), String(64)

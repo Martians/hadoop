@@ -151,6 +151,9 @@ public class Command extends BaseCommand {
         fixingParam();
     }
 
+    /**
+     * http://ifeve.com/guava-ratelimiter/
+     */
     public int speedLimit(int limit) {
         if (workp.throttle != 0 && limit > 0) {
             boolean hit = false;
@@ -159,7 +162,9 @@ public class Command extends BaseCommand {
                     hit = true;
                     break;
                 }
-                limit /= 2;
+                if ((limit /= 2) == 0) {
+                    break;
+                }
             }
 
             if (hit == false) {
