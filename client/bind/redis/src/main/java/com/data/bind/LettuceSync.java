@@ -206,6 +206,7 @@ public class LettuceSync extends RedisBase {
 
         for (int i = 0; i < batch; i++) {
             DataSource.Wrap wrap = source.next();
+            log.info("{}", wrap.array[0]);
             if (wrap == null) {
                 log.debug("write get null, completed");
                 return -1;
@@ -252,6 +253,7 @@ public class LettuceSync extends RedisBase {
                 log.debug("read get null, completed");
                 return -1;
             }
+            log.info("{}", wrap.array[0]);
 
             switch (action) {
                 case data:

@@ -71,23 +71,6 @@ public class HBaseHandler extends AppHandler {
      */
     private byte[] columnFamilyBytes;
 
-    @Override
-    public void initialize() {
-        try {
-            resolveParam();
-
-            connecting();
-
-            preparing();
-
-            construct();
-
-        } catch (Exception e) {
-            log.warn("initialize error: {}", e);
-            System.exit(-1);
-        }
-    }
-
     public void threadWork() {
         try {
             table.set(connection.getTable(tableName));
@@ -194,6 +177,8 @@ public class HBaseHandler extends AppHandler {
             log.error("preparing failed, {}", e);
             System.exit(-1);
         }
+
+        construct();
     }
 
     protected void construct() {

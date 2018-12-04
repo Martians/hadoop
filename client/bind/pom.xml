@@ -24,6 +24,7 @@
         <!--<module>hbase</module>-->
         <module>kafka</module>
         <module>redis</module>
+        <module>ignite</module>
         <!--<module>mapr</module>-->
     </modules>
 

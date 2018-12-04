@@ -48,6 +48,7 @@ public class BaseCommand {
      */
     protected Properties properties = new Properties();
     protected Properties unregisted = new Properties();
+    protected Properties movingkeys = new Properties();
 
     /**
      * 读取配置时，优先在传入的key前增加 current；找不到时再使用原key
@@ -80,6 +81,9 @@ public class BaseCommand {
         }
     }
 
+    /**
+     * 这里自动加了前缀，因为这些option经常使用，所以放在基类中
+     */
     class Useful extends BaseOption {
         Useful() {
             /**
@@ -144,8 +148,12 @@ public class BaseCommand {
 
         if (value == null) {
             if (force) {
-                log.error("can't parse option {}", key);
-                System.exit(1);
+                try {
+                    throw new Exception();
+                } catch (Exception e) {
+                    log.error("can't parse option {}, maybe removed or not defined!\n{}", key, e);
+                    //System.exit(-1);
+                }
             } else {
                 return null;
             }
@@ -175,6 +183,8 @@ public class BaseCommand {
         return Enum.valueOf(clazz, get(key));
     }
 
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////
     public void debug() {
         properties.forEach((k,v) -> log.info("{} -> {}", k, v));
     }
@@ -186,27 +196,13 @@ public class BaseCommand {
         });
     }
 
-    /**
-     * move option to inner member, should never used by outside through get(), but inner member
-     */
-    protected Long moveLong(String key) {
-        Long data = getLong(key);
-        properties.remove(key);
-        properties.remove(current + "." + key);
-        return data;
-    }
-
-    protected int moveInt(String key) {
-        return moveLong(key).intValue();
-    }
-    
-    public String toString() {
+    public String dump(boolean full) {
         StringBuffer sb = new StringBuffer();
         sb.append("\n");
 
         Map map = dump();
         for (Object key : map.keySet()) {
-            if (properties.getProperty(current + "." + key) != null) {
+            if (!full && properties.getProperty(current + "." + key) != null) {
                 continue;
             }
             if (key.toString().length() < 20) {
@@ -216,6 +212,40 @@ public class BaseCommand {
             }
         }
         return sb.toString();
+    }
+
+    public String toString() {
+        return dump(false);
+    }
+
+    /**
+     * move option to inner member, should never used by outside through get(), but inner member
+     */
+    protected Long moveLong(String key) {
+        Long data = getLong(key);
+
+        moveKey(key);
+        moveKey(current + "." + key);
+        return data;
+    }
+
+    protected int moveInt(String key) {
+        return moveLong(key).intValue();
+    }
+
+    protected void moveKey(String key) {
+        if (properties.get(key) != null) {
+            movingkeys.put(key, properties.get((key)));
+            properties.remove(key);
+        }
+    }
+
+    protected String getMoving(String key) {
+        String data = get(key, false);
+        if (data == null) {
+            return get(movingkeys, key);
+        }
+        return data;
     }
 
     /**
@@ -232,7 +262,7 @@ public class BaseCommand {
         return notSupport(key, param, "", false);
     }
     public boolean notSupport(String key, ParamCheck param, String display, boolean exit) {
-        if (param.check(get(key))) {
+        if (param.check(getMoving(key))) {
             if (display.length() > 0) {
                 log.info("{}", display);
 
@@ -265,8 +295,8 @@ public class BaseCommand {
      */
     public boolean notice(String key, ParamCheck param, String display) { return notice(key, param, display, false); }
     public boolean notice(String key, ParamCheck param, String display, boolean exit) {
-        if (!param.check(get(key))) {
-            log.info("notice: [{} = {}], set: {}", key, get(key), display);
+        if (!param.check(getMoving(key))) {
+            log.info("notice: [{} = {}], set: {}", key, getMoving(key), display);
 
             if (exit) {
                 System.exit(-1);
@@ -514,7 +544,11 @@ public class BaseCommand {
         unregistCheck();
         unregistParsed(parsed);
 
-        dumpConfig();
+        if (getBool("dump")) {
+            log.info("dump config:");
+            log.info(dump(false));
+            System.exit(-1);
+        }
     }
 
     protected void unregistOption(Options commandLine) {
@@ -632,24 +666,5 @@ public class BaseCommand {
         }
         return sortMap;
     }
-
-    private void dumpConfig() {
-        if (getBool("dump")) {
-            log.info("dump config:");
-
-            Map map = dump();
-            for (Object key : map.keySet()) {
-                /**
-                 * 如果有更长路径的配置相匹配，较短的配置将被覆盖
-                 */
-                if (properties.getProperty(current + "." + key) != null) {
-                    continue;
-                }
-                log.info("\t{}\t: {}", String.format("[%6s]", key), map.get(key));
-            }
-            System.exit(0);
-        }
-    }
-
 }
 

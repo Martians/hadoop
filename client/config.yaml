@@ -1,6 +1,6 @@
 ---
 global:
-  bind: Kafka
+  bind: Redis
         # Kafka、Cassandra、HBase、MapR
   host: 192.168.0.81,192.168.0.82,192.168.0.83
   clear: false
@@ -104,8 +104,8 @@ redis:
     read_empty: 0
 
   work:
-    type: write
-    total: 100000
+    type: write read
+    total: 10
     batch: 1
     thread: 3
 
@@ -118,8 +118,19 @@ redis:
       # data、list
 
   async:
-    open: true
+    open: false
     wait: false
     outstanding: 1000
     notify: 0
     pool: 0
+
+---
+ignite:
+  host: 192.168.0.80:47500
+
+  table:
+    schema: String(10), String(64)
+
+  work:
+    type: write read
+    total: 100000

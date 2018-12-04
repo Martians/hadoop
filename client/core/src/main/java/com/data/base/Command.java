@@ -11,12 +11,16 @@ import com.data.util.data.source.ScanSource;
 import com.data.util.monitor.MetricTracker;
 import com.data.util.sys.ExtClassPathLoader;
 import com.data.bind.AppHandler;
+
+import java.io.File;
 import java.net.InetAddress;
+import java.nio.file.Path;
 import java.util.*;
 
 
 import static com.data.base.Command.Type.read;
 import static com.data.base.Command.Type.scan;
+import static com.data.util.disk.Disk.traversePath;
 
 public class Command extends BaseCommand {
 
@@ -75,7 +79,18 @@ public class Command extends BaseCommand {
 
         regist(DataSource.class, Random.class);
 
-        validBind = "kafka, cassandra, hbase, redis, create";
+        registBind();
+    }
+
+    protected void registBind() {
+        //File file = new File("bind");
+        //if (file.exists()) {
+        //    for (File curr : file.listFiles()) {
+        //        if (curr.isDirectory()) {
+        //        }
+        //    }
+        //}
+        validBind = "cassandra, hbase, ignite, kafka, redis";
     }
 
     protected void parseDynamic(String[] args) {

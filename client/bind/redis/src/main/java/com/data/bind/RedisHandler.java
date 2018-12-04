@@ -76,20 +76,6 @@ public class RedisHandler extends AppHandler {
     RedisBase client = null;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    @Override
-    public void initialize() {
-        try {
-            resolveParam();
-
-            connecting();
-
-            preparing();
-
-        } catch (Exception e) {
-            log.warn("initialize error: {}", e);
-            System.exit(-1);
-        }
-    }
 
     protected void resolveParam() {
         Client type = command.getEnum("client", Client.class);

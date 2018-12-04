@@ -12,33 +12,40 @@ import java.util.List;
 public class Disk {
     static final Logger log = LoggerFactory.getLogger(Disk.class);
 
-    static public List<Path> traversePath(String dir, String prefix) {
+    static public List<Path> traversePath(String path, String prefix, boolean directory) {
 
         List<Path> pathList = new ArrayList<>();
+        List<Path> dirList = new ArrayList<>();
         class Tranverse extends SimpleFileVisitor<Path> {
             @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                 if (file.toString().endsWith(prefix)) {
                     pathList.add(file);
                 }
                 return FileVisitResult.CONTINUE;
             }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                dirList.add(dir);
+                return super.postVisitDirectory(dir, exc);
+            }
         }
 
         try {
-            Files.createDirectories(Paths.get(dir));
-            Path path = Paths.get(dir);
-            Files.walkFileTree(path, new Tranverse());
+            Path curr = Paths.get(path);
+            Files.createDirectories(curr);
+            Files.walkFileTree(curr, new Tranverse());
 
         } catch(IOException e) {
-            log.info("traverse path {}, but failed {}", dir, e);
+            log.info("traverse path {}, but failed {}", path, e);
             System.exit(-1);
         }
-        return pathList;
+        return directory ? dirList : pathList;
     }
 
     static public List<Path> deletePath(String path, String prefix) {
-        List<Path> pathList = traversePath(path, prefix);
+        List<Path> pathList = traversePath(path, prefix, false);
 
         try {
             for (Path file : pathList) {

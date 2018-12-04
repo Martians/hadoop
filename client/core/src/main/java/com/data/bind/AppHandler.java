@@ -33,13 +33,38 @@ public class AppHandler {
         this.output = scheduler.output;
     }
 
+    /**
+     * 主线程初始化
+     */
     public void initialize() {
+        try {
+            resolveParam();
+
+            connecting();
+
+            preparing();
+
+        } catch (Exception e) {
+            log.warn("initialize error: {}", e);
+            System.exit(-1);
+        }
     }
+    protected void resolveParam() {}
+    protected void connecting() {}
+    protected void preparing() {}
+
+    /**
+     * 主线程关闭
+     */
+    public void terminate() throws Exception {
+    }
+
+    /**
+     * 各线程相关工作
+     */
     public void threadWork() {
     }
     public void threadTerm() {
-    }
-    public void terminate() {
     }
 
     public BaseOption getOption() { return null; }

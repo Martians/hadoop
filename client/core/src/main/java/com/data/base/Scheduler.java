@@ -111,11 +111,16 @@ public class Scheduler {
 
     void terminate() {
 
-        handler.terminate();
+        try {
+            handler.terminate();
 
-        iopsThreads.clear();
+            iopsThreads.clear();
 
-        MetricTracker.terminate();
+            MetricTracker.terminate();
+
+        } catch (Exception e) {
+            log.error("terminate failed, {}", e);
+        }
     }
 
 }

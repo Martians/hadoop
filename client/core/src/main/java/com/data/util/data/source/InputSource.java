@@ -106,7 +106,7 @@ public class InputSource extends DataSource implements Runnable {
             System.exit(-1);
         }
 
-        pathList = Disk.traversePath(dataPath, "csv");
+        pathList = Disk.traversePath(dataPath, "csv", false);
         log.info("try to load, file range: {}", pathList.size());
     }
 

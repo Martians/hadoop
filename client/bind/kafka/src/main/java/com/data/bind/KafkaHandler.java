@@ -249,25 +249,6 @@ public class KafkaHandler extends AppHandler {
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    @Override
-    public void initialize() {
-        try {
-            resolveParam();
-
-            connecting();
-
-            preparing();
-
-            construct();
-
-            fixSchema();
-
-        } catch (Exception e) {
-            log.warn("initialize error: {}", e);
-            System.exit(-1);
-        }
-    }
-
     public void threadWork() {
         createConsumer();
     }
@@ -448,12 +429,7 @@ public class KafkaHandler extends AppHandler {
         createTopic(createList);
 
         initTopic();
-    }
 
-    protected void construct() {
-    }
-
-    public void fixSchema() {
         //int max_count = 2;
         //if (command.schema.list.size() > max_count) {
         //    log.info("======> kafka only need 1 field, fix schema");

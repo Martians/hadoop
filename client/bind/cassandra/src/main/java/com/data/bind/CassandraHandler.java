@@ -65,21 +65,6 @@ public class CassandraHandler extends AppHandler {
     Session session;
 
     @Override
-    public void initialize() {
-        try {
-            resolveParam();
-
-            connecting();
-
-            preparing();
-
-        } catch (Exception e) {
-            log.warn("terminate error: {}", e);
-            System.exit(-1);
-        }
-    }
-
-    @Override
     public void terminate() {
         if (session != null) {
             session.close();
