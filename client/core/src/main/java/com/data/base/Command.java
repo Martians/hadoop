@@ -11,6 +11,7 @@ import com.data.util.data.source.ScanSource;
 import com.data.util.monitor.MetricTracker;
 import com.data.util.sys.ExtClassPathLoader;
 import com.data.bind.AppHandler;
+import com.google.common.util.concurrent.RateLimiter;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -42,6 +43,7 @@ public class Command extends BaseCommand {
 
     public class WorkParam {
         public int   fetch = moveInt("work.fetch");
+        public int throttle = moveInt("work.throttle");
     }
     public WorkParam workp;
 
@@ -58,6 +60,7 @@ public class Command extends BaseCommand {
     List<Type> stepList = new ArrayList<>();
     private Class<?> appHandlerFactory;
 
+    public RateLimiter rate;
     //////////////////////////////////////////////////////////////////////////////////////////////////////////
     public Command() {}
     public Command(String[] args, boolean test) {
@@ -146,6 +149,25 @@ public class Command extends BaseCommand {
         checkParam();
 
         fixingParam();
+    }
+
+    public int speedLimit(int limit) {
+        if (workp.throttle != 0 && limit > 0) {
+            boolean hit = false;
+            for (int i = 0; i < 2; i++) {
+                if (rate.tryAcquire(limit)) {
+                    hit = true;
+                    break;
+                }
+                limit /= 2;
+            }
+
+            if (hit == false) {
+                rate.acquire();
+                limit = 1;
+            }
+        }
+        return limit;
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -244,6 +266,15 @@ public class Command extends BaseCommand {
             String host = getHost();
             set("table.keyspace", host);
         }
+
+        if (workp.throttle != 0) {
+            if (workp.fetch * param.thread > param.total) {
+                int fetch = Math.max(param.total.intValue() / param.thread, 1);
+                log.info("throttle {}, set fetch {} -> {}", workp.throttle, workp.fetch, fetch);
+                workp.fetch = fetch;
+            }
+            rate = RateLimiter.create(workp.throttle);
+        }
     }
 
     static String getHost() {
@@ -295,9 +326,11 @@ public class Command extends BaseCommand {
     }
 
     /**
-     * 重置消耗性 param
+     * 进入下一个step时进行重置
      */
     public void resetStep() {
+        schema.reset();
+
         table.read_empty = getLong("table.read_empty");
     }
 

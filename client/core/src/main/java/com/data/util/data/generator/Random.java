@@ -118,6 +118,9 @@ public class Random {
         }
     }
 
+    public void reset() {
+    }
+
     /**
      * every thread command different seed
      */
@@ -132,7 +135,7 @@ public class Random {
         /**
          * recordSeed 确保只设置一次
          */
-        if (seed != 0 && recordSeed == 0) {
+        if (seed != 0) {
             recordSeed = seed + index;
             getRandom().setSeed(recordSeed);
         }
@@ -150,7 +153,7 @@ public class Random {
                 /**
                  * 后续仍然会在 threadPrepare 根据 thread index 设置 seed
                  */
-                recordSeed = 0;
+                //recordSeed = 0;
 
                 log.info("start prepare data set, for schema: {}", item);
                 for (int i = 0; i < item.count; i++) {

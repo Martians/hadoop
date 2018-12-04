@@ -30,6 +30,7 @@ public class ClientOption {
              * inner work
              */
             addOption("fetch",  "thread loop task count", 1000);
+            addOption("throttle",  "speed throttle/s", 0);
         }
     }
 

@@ -39,19 +39,26 @@ public class IgniteHandler extends AppHandler {
 
     public static class Option extends com.data.util.command.BaseOption {
         public Option() {
+            addOption("client", "client or server", false);
+            addOption("file", "server config file", "example-cache.xml");
         }
     }
 
     String cacheName = "test";
 
+    /**
+     * thin client
+     */
     IgniteClient thinClient;
     ClientCache<String, String> thinClientCache;
 
-    String configFile = "example-cache.xml";
-    IgniteCache<String, String> cache;
+    /**
+     * normal
+     */
     Ignite ignite;
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    IgniteCache<String, String> cache;
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     protected void resolveParam() {
         List<DataSchema.Item> list = command.schema.list;
         if (list.size() != 2
@@ -65,9 +72,9 @@ public class IgniteHandler extends AppHandler {
 
     protected void connecting() {
         if (true) {
-            Ignition.setClientMode(true);
+            Ignition.setClientMode(command.getBool("client"));
 
-            ignite = Ignition.start(configFile);
+            ignite = Ignition.start(command.get("file"));
             CacheConfiguration<String, String> cfg = new CacheConfiguration<>();
             cfg.setCacheMode(CacheMode.PARTITIONED);
             cfg.setBackups(0);

@@ -1,6 +1,6 @@
 ---
 global:
-  bind: Redis
+  bind: Ignite
         # Kafka、Cassandra、HBase、MapR
   host: 192.168.0.81,192.168.0.82,192.168.0.83
   clear: false
@@ -15,6 +15,7 @@ global:
     total: 1000
     batch: 100
     thread: 1
+    throttle: 0
     read_thread: 100
 
   gen:
@@ -104,10 +105,11 @@ redis:
     read_empty: 0
 
   work:
-    type: write read
-    total: 10
-    batch: 1
-    thread: 3
+    type: write
+    total: 100000
+    batch: 2
+    thread: 10
+    throttle: 3000
 
   gen:
     data_path: ''
@@ -127,10 +129,14 @@ redis:
 ---
 ignite:
   host: 192.168.0.80:47500
+  client: true
+  file: example-cache.xml
 
   table:
     schema: String(10), String(64)
 
   work:
-    type: write read
+    type: write
     total: 100000
+    thread: 10
+    throttle: 100

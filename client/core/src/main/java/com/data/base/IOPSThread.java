@@ -50,6 +50,7 @@ public class IOPSThread extends Thread {
         initialize();
 
         int[] success = new int[3];
+        int fetched = 0;
         Long total = 0L;
 
         try {
@@ -58,11 +59,16 @@ public class IOPSThread extends Thread {
                  * 上一次取得的任务尚未完成，继续执行
                  *      不再从source中后去任务数，source的总个数是一定的，取走了就没有了
                  */
-                if (success[0] < success[2]) {
-                    success[2] = source.nextWork(command.workp.fetch - success[0]) + success[0];
+                if (success[0] < fetched) {
+                    fetched -= success[0];
+
+                    if (fetched < success[0]) {
+                        fetched = source.nextWork(command.workp.fetch - fetched) + fetched;
+                    }
                 } else {
-                    success[2] = source.nextWork(command.workp.fetch);
+                    fetched = source.nextWork(command.workp.fetch);
                 }
+                success[2] = command.speedLimit(fetched);
 
                 /**
                  * success[2]：传入参数，本地要执行的次数

@@ -156,6 +156,14 @@ public class DataSchema {
         }
     }
 
+    public void reset() {
+        for (Item item : list) {
+            if (item.gen != null) {
+                item.gen.reset();
+            }
+        }
+    }
+
     public void initialize(BaseCommand command, String schemaString) {
         set(command);
         initialize(schemaString);
