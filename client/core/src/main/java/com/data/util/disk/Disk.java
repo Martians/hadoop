@@ -3,7 +3,9 @@ package com.data.util.disk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
@@ -57,5 +59,28 @@ public class Disk {
             System.exit(-1);
         }
         return pathList;
+    }
+
+    /**
+     * 读取默认配置文件，通常会在jar包中
+     */
+    static public Boolean fileExist(String file, boolean resource) {
+        if (resource) {
+            URL url = Thread.currentThread().getContextClassLoader().getResource(file);
+            return url != null;
+
+        } else {
+            return new File(file).exists();
+        }
+    }
+
+    static public String resourcePath(String file) {
+        URL url = Thread.currentThread().getContextClassLoader().getResource(file);
+        if (url != null) {
+            return url.getPath();
+
+        } else {
+            return null;
+        }
     }
 }

@@ -132,7 +132,7 @@ ignite:
   file: example-cache.xml
 
   thin:
-    open: true
+    open: false
     host: 192.168.0.80:10800
 
   table:

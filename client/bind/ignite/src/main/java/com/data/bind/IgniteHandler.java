@@ -1,6 +1,7 @@
 package com.data.bind;
 
 import com.data.util.data.source.DataSource;
+import com.data.util.disk.Disk;
 import com.data.util.schema.DataSchema;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
@@ -18,13 +19,16 @@ import java.util.List;
 
 /**
  *
- * 配置：
- *      1. 使用 examples/config/example-cache.xml 作为模板，修改ip地址
- *      2. <property name="peerClassLoadingEnabled" value="true"/>
- *
  * 两种client
- *      1. thin：访问端口与normal client不同，默认10800
+ *      1. useThin：访问端口与normal client不同，默认10800
+ *              配置：<property name="peerClassLoadingEnabled" value="true"/>
+ *                    不需要专门配置端口，默认已经启动了监听的端口
+ *
+ *              启动：直接 bin/ignite.sh即可
+ *
  *      2. normal：必须指定配置文件
+ *              配置：examples/config/example-cache.xml 作为模板，修改ip地址
+ *              启动：bin/ignite.sh examples/config/example-cache.xml
  *
  * 两种模式：（normal client下）
  *      1. client模式：数据发送到远端server
@@ -63,6 +67,8 @@ public class IgniteHandler extends AppHandler {
     Ignite ignite;
     IgniteCache<String, String> cache;
 
+    boolean useThin;
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     protected void resolveParam() {
         List<DataSchema.Item> list = command.schema.list;
@@ -73,10 +79,12 @@ public class IgniteHandler extends AppHandler {
             log.info("ignite test, schema must be [string, string], current: {}", command.schema);
             System.exit(-1);
         }
+
+        useThin = command.getBool("thin.open");
     }
 
     protected void connecting() {
-        if (command.getBool("thin.open")) {
+        if (useThin) {
             /**
              * thin client模式
              *  https://www.cnblogs.com/peppapigdaddy/archive/2018/11/12/9815848.html
@@ -92,7 +100,14 @@ public class IgniteHandler extends AppHandler {
         } else {
             Ignition.setClientMode(command.getBool("client"));
 
-            ignite = Ignition.start(command.get("file"));
+            String path = command.get("file");
+            if (Disk.fileExist(path, false)) {
+
+            } else if (Disk.fileExist(path, true)) {
+                path = Disk.resourcePath(path);
+            }
+
+            ignite = Ignition.start(path);
             CacheConfiguration<String, String> cfg = new CacheConfiguration<>();
             cfg.setCacheMode(CacheMode.PARTITIONED);
             cfg.setBackups(0);
@@ -135,7 +150,12 @@ public class IgniteHandler extends AppHandler {
                 log.debug("write get null, completed");
                 return -1;
             }
-            thinClientCache.put((String)wrap.array[0], (String)wrap.array[1]);
+            if (useThin) {
+                thinClientCache.put((String) wrap.array[0], (String) wrap.array[1]);
+
+            } else {
+                cache.put((String) wrap.array[0], (String) wrap.array[1]);
+            }
 
             result[0] += 1;
             result[1] += wrap.size;
@@ -148,7 +168,15 @@ public class IgniteHandler extends AppHandler {
         while (result[0] < batch) {
 
             DataSource.Wrap wrap = source.next();
-            String data = cache.get((String)wrap.array[0]);
+            String data;
+
+            if (useThin) {
+                data = thinClientCache.get((String) wrap.array[0]);
+
+            } else {
+                data = cache.get((String) wrap.array[0]);
+            }
+
             if (data == null) {
                 if (command.emptyForbiden()) {
                     return -1;

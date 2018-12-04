@@ -1,6 +1,7 @@
 package com.data.util.command;
 
 import com.data.util.common.Formatter;
+import com.data.util.disk.Disk;
 import com.data.util.sys.Reflect;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
@@ -418,24 +419,11 @@ public class BaseCommand {
         yamlOrProp(false);
     }
 
-    /**
-     * 读取默认配置文件，通常会在jar包中
-     */
-    private boolean resourceExist(String file, boolean resource) {
-        if (resource) {
-            URL url = Thread.currentThread().getContextClassLoader().getResource(file);
-            return url != null;
-
-        } else {
-            return new File(file).exists();
-        }
-    }
-
     private void yamlOrProp(boolean resource) {
-        if (resourceExist(yamlConfig, resource)) {
+        if (Disk.fileExist(yamlConfig, resource)) {
             parseFile(yamlConfig, resource);
 
-        } else if (resourceExist(propConfig, resource)) {
+        } else if (Disk.fileExist(propConfig, resource)) {
             parseFile(propConfig, resource);
         }
     }
@@ -527,7 +515,7 @@ public class BaseCommand {
          *                     在此情况下，可以使用此配置
          */
         } else {
-            if (resourceExist(specConfig, false)) {
+            if (Disk.fileExist(specConfig, false)) {
                 parseFile(specConfig, false);
             }
         }
