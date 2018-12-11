@@ -71,7 +71,7 @@ public class KafkaHandler extends AppHandler {
 
             addOption("consumer.group",  "consumer client group", "group_test");
             addOption("consumer.client",  "consumer client id current", "client_test");
-            addOption("consumer.always",  "continuous consumer", "client_test");
+            addOption("consumer.always",  "continuous consumer", false);
 
             /**
              * bind param
@@ -536,7 +536,7 @@ public class KafkaHandler extends AppHandler {
             } else {
                 if (command.getBool("consumer.always")) {
                 } else {
-                    log.debug("read get null, completed");
+                    log.info("read get null, completed");
                     return -1;
                 }
             }
