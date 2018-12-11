@@ -14,6 +14,8 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.Node;
+import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.TopicPartitionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -252,7 +254,7 @@ public class KafkaHandler extends AppHandler {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     public void threadWork() {
-        createConsumer();
+        createConsumer(IOPSThread.index());
     }
 
     @Override
@@ -335,7 +337,7 @@ public class KafkaHandler extends AppHandler {
         }
     }
 
-    void createConsumer() {
+    void createConsumer(int index) {
         /**
          * org.apache.kafka.clients.consumer.KafkaConsumer<K,V>
          */
@@ -348,7 +350,7 @@ public class KafkaHandler extends AppHandler {
             if (command.getInt("work.read_thread") == 1) {
                 config.put("client.id", command.get("consumer.client"));
             } else {
-                config.put("client.id", command.get("consumer.client") + "_" + IOPSThread.index());
+                config.put("client.id", command.get("consumer.client") + "_" + index);
             }
 
             config.put("enable.auto.commit", "true");
@@ -432,10 +434,30 @@ public class KafkaHandler extends AppHandler {
 
         initTopic();
 
+        resetConsumer();
+
         //int max_count = 2;
         //if (command.schema.list.size() > max_count) {
         //    log.info("======> kafka only need 1 field, fix schema");
         //    command.schema.limit(max_count);
+        //}
+    }
+
+    /**
+     * 当前不用此方式进行 reset
+     */
+    protected void resetConsumer() {
+        //if (command.isRead()) {
+        //    createConsumer(0);
+        //
+        //    for (String topic : topicList) {
+        //        List<TopicPartition> list = new ArrayList<>();
+        //        for (TopicPartitionInfo info : descTopic(topic).partitions()) {
+        //            list.add(new TopicPartition(topic, info.partition()));
+        //        }
+        //        consumer.get().assign(list);
+        //        consumer.get().seekToBeginning(list);
+        //    }
         //}
     }
 
