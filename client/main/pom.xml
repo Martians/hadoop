@@ -29,10 +29,10 @@
             <!--<groupId>com.data</groupId>-->
             <!--<artifactId>hbase</artifactId>-->
         <!--</dependency>-->
-        <!--<dependency>-->
-            <!--<groupId>com.data</groupId>-->
-            <!--<artifactId>kafka</artifactId>-->
-        <!--</dependency>-->
+        <dependency>
+            <groupId>com.data</groupId>
+            <artifactId>kafka</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.data</groupId>
             <artifactId>redis</artifactId>

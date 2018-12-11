@@ -1,6 +1,6 @@
 ---
 global:
-  bind: Ignite
+  bind: Kafka
         # Kafka、Cassandra、HBase、MapR
   host: 192.168.0.81,192.168.0.82,192.168.0.83
   clear: false
@@ -73,10 +73,11 @@ kafka:
     replica: 1
 
   work:
-    type: write
-    total: 10000
+    type: read
+    total: 100000
     thread: 5
       # write、read; generate、load; scan
+    read_thread: 5
 
   topic:
     name: test

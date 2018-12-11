@@ -153,7 +153,7 @@ public class BaseCommand {
                     throw new Exception();
                 } catch (Exception e) {
                     log.error("can't parse option {}, maybe removed or not defined!\n", key);
-                    //System.exit(-1);
+                    System.exit(-1);
                 }
             } else {
                 return null;

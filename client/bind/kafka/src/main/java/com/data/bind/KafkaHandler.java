@@ -71,6 +71,7 @@ public class KafkaHandler extends AppHandler {
 
             addOption("consumer.group",  "consumer client group", "group_test");
             addOption("consumer.client",  "consumer client id current", "client_test");
+            addOption("consumer.always",  "continuous consumer", "client_test");
 
             /**
              * bind param
@@ -341,7 +342,7 @@ public class KafkaHandler extends AppHandler {
             Properties config = new Properties();
             config.putAll(props);
 
-            config.put("group.id", command.get("group"));
+            config.put("group.id", command.get("consumer.group"));
 
             if (command.getInt("work.read_thread") == 1) {
                 config.put("client.id", command.get("consumer.client"));
@@ -352,12 +353,12 @@ public class KafkaHandler extends AppHandler {
             config.put("enable.auto.commit", "true");
             config.put("auto.commit.interval.ms", "1000");
 
-            config.put("key.deserializer", "org.apache.kafka.Common.serialization.StringDeserializer");
-            config.put("value.deserializer", "org.apache.kafka.Common.serialization.StringDeserializer");
+            config.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+            config.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 
             if (true) {
-                config.put("key.deserializer", "org.apache.kafka.Common.serialization.StringDeserializer");
-                config.put("value.deserializer", "org.apache.kafka.Common.serialization.StringDeserializer");
+                config.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+                config.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 
             } else {
                 config.put("key.deserializer", "org.apache.kafka.Common.serialization.ByteArrayDeserializer");
@@ -533,7 +534,7 @@ public class KafkaHandler extends AppHandler {
                 consumer.get().seekToBeginning(consumer.get().assignment());
 
             } else {
-                if (command.getBool("consumer_always")) {
+                if (command.getBool("consumer.always")) {
                 } else {
                     log.debug("read get null, completed");
                     return -1;
