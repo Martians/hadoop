@@ -43,6 +43,7 @@ import static com.data.base.Command.Type.read;
  * 性能：
  *      ## 自带性能测试：
  *      https://github.com/apache/kafka/blob/trunk/tools/src/main/java/org/apache/kafka/tools/ProducerPerformance.java
+ *      https://github.com/apache/kafka/blob/trunk/core/src/main/scala/kafka/tools/ConsumerPerformance.scala
  *
  *      1. Producer
  *          acks=1 时有最大性能，ack=2将降低一半
@@ -351,7 +352,7 @@ public class KafkaHandler extends AppHandler {
             }
 
             config.put("enable.auto.commit", "true");
-            config.put("auto.commit.interval.ms", "1000");
+            config.put("auto.commit.interval.ms", "5000");
 
             config.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
             config.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
