@@ -107,7 +107,7 @@ public class KafkaHandler extends AppHandler {
     /**
      * consumer
      */
-    static final ThreadLocal<Consumer<String, String>> consumer = new ThreadLocal<>();
+    static protected ThreadLocal<Consumer<String, String>> consumer = new ThreadLocal<>();
     static final ThreadLocal<Boolean> consumerInitial = new ThreadLocal<Boolean>();
     private java.time.Duration poolTime = Duration.ofMillis(1000);
 

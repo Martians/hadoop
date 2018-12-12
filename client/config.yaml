@@ -1,6 +1,6 @@
 ---
 global:
-  bind: Kafka
+  bind: Ignite
         # Kafka、Cassandra、HBase、MapR
   host: 192.168.0.81,192.168.0.82,192.168.0.83
   clear: false
@@ -134,7 +134,8 @@ ignite:
 
   thin:
     open: true
-    host: 192.168.0.80:10800
+#    host: 192.168.0.80:10800
+    host: 192.168.80.51:10800
 
   table:
     schema: String(10), String(64)
