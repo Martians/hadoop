@@ -108,6 +108,7 @@ public class IgniteHandler extends AppHandler {
             }
 
             ignite = Ignition.start(path);
+			
             CacheConfiguration<String, String> cfg = new CacheConfiguration<>();
             cfg.setCacheMode(CacheMode.PARTITIONED);
             cfg.setBackups(0);
