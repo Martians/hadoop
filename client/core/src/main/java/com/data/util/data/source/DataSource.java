@@ -32,6 +32,8 @@ public class DataSource {
             addOption("output.file_count", "min output file count", 1);
             addOption("output.file_size", "output file size (M)", "-1");
             addOption("output.file_rand", "random write to multi file", true);
+
+            addOption("input.verify", "verify data schema", true);
         }
     }
 

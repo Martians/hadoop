@@ -30,6 +30,8 @@ global:
     output:
       file_count: 10
       file_size: -1
+    input:
+      verify: true
 
   table:
     schema: String(4), String(100){2}
@@ -69,13 +71,20 @@ kafka:
 
   table:
 #    schema: integer, string(10/1000) {3}
-    schema: string(1024)
+    schema: string(10), string(30), string(20)
     replica: 1
+
+  gen:
+    input:
+      verify: false
+    output:
+      file_rand: false
+      file_size: 1g
 
   work:
     type: read
     total: 100000
-    thread: 1
+    thread: 3
       # write、read; generate、load; scan
     read_thread: 5
 
@@ -95,6 +104,7 @@ kafka:
   consumer:
     group: group_test
     client: client-test
+    extract: 1
 
 ---
 redis:

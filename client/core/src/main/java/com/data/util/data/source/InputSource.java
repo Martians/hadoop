@@ -27,6 +27,7 @@ public class InputSource extends DataSource implements Runnable {
 
     MemCache cache;
     Thread  thread;
+    boolean verify;
 
     @Override
     public void initialize(BaseCommand command, DataSchema schema, String path) {
@@ -36,6 +37,8 @@ public class InputSource extends DataSource implements Runnable {
 
         thread = new Thread(this, "input source");
         thread.start();
+
+        verify = command.getBool("gen.input.verify");
     }
 
     void prepare() {
@@ -58,46 +61,40 @@ public class InputSource extends DataSource implements Runnable {
             return null;
         }
 
-        int size = 0;
-        int nums = 0;
+        if (verify) {
+            int size = 0;
+            int nums = 0;
 
-        String[] split = line.split("[, ]");
-        Object[] array = null;
+            String[] split = line.split(",");
+            Object[] array = null;
 
-        if (schema.list.size() != split.length) {
-            log.warn("input source, schema size: {}, split: {}, line: {}",
-                    schema.list.size(), split.length, line);
-            System.exit(-1);
-        }
-
-        List<DataSchema.Item> list = schema.list;
-        array = new Object[list.size()];
-        System.arraycopy(split, 0, array, 0, list.size());
-
-        for (int i = 0; i < list.size(); i++) {
-            DataSchema.Item item = list.get(i);
-            if (item.type == DataSchema.Type.integer) {
-                array[i] = Long.parseLong(split[i]);
-                size += DataSchema.actualSize(0);
-
-            } else {
-                size += DataSchema.actualSize(split[i]);
+            if (schema.list.size() != split.length) {
+                log.warn("input source, schema size: {}, split: {}, line: {}",
+                        schema.list.size(), split.length, line);
+                System.exit(-1);
             }
-        }
 
-        //} else {
-        //    array = new Object[schema.primaryKey.size()];
-        //
-        //    for (Integer p : schema.primaryKey) {
-        //        DataSchema.Item item = schema.handlelist.get(p);
-        //        if (item.type == integer) {
-        //            split[index] = Long.parseLong((String)split[p]);
-        //        }
-        //        size += item.actual();
-        //        index++;
-        //    }
-        //}
-        return new Wrap(array, size);
+            List<DataSchema.Item> list = schema.list;
+            array = new Object[list.size()];
+            System.arraycopy(split, 0, array, 0, list.size());
+
+            for (int i = 0; i < list.size(); i++) {
+                DataSchema.Item item = list.get(i);
+                if (item.type == DataSchema.Type.integer) {
+                    array[i] = Long.parseLong(split[i]);
+                    size += DataSchema.actualSize(0);
+
+                } else {
+                    size += DataSchema.actualSize(split[i]);
+                }
+            }
+            return new Wrap(array, size);
+
+        } else {
+            Object[] array = new Object[1];
+            array[0] = line;
+            return new Wrap(array, line.length());
+        }
     }
 
     public void loadFiles() {

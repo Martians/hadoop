@@ -438,6 +438,7 @@ public class Command extends BaseCommand {
 
         switch (type) {
             case read:
+                source = new DataSource();
                 break;
             case write:
             case generate: source = new DataSource();
@@ -453,13 +454,15 @@ public class Command extends BaseCommand {
                 break;
         }
 
-        if (source == null) {
-            if (exist("gen.data_path")) {
-                source = new InputSource();
-            } else {
-                source = new DataSource();
-            }
-        }
+        //if (source == null) {
+        //    if (exist("gen.data_path")) {
+        //        source = new InputSource();
+        //    } else {
+        //        source = new DataSource();
+        //    }
+        //    log.warn("no need add source");
+        //    System.exit(-1);
+        //}
 
         if (source instanceof InputSource) {
         }

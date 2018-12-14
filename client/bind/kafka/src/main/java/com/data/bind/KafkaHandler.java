@@ -4,6 +4,7 @@ import com.data.base.Command;
 import com.data.base.IOPSThread;
 import com.data.util.data.source.DataSource;
 
+import com.data.util.data.source.OutputSource;
 import com.data.util.schema.DataSchema;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -75,6 +76,7 @@ public class KafkaHandler extends AppHandler {
             addOption("consumer.group",  "consumer client group", "group_test");
             addOption("consumer.client",  "consumer client id current", "client_test");
             addOption("consumer.always",  "continuous consumer", false);
+            addOption("consumer.extract",  "extract field to file", "");
 
             /**
              * bind param
@@ -109,8 +111,11 @@ public class KafkaHandler extends AppHandler {
      * consumer
      */
     static protected ThreadLocal<Consumer<String, String>> consumer = new ThreadLocal<>();
-    static final ThreadLocal<Boolean> consumerInitial = new ThreadLocal<Boolean>();
-    private java.time.Duration poolTime = Duration.ofMillis(30000);
+    //static final ThreadLocal<Boolean> consumerInitial = new ThreadLocal<Boolean>();
+    private java.time.Duration poolTime = Duration.ofMillis(10000);
+
+    private OutputSource output = null;
+    private ArrayList<Integer> filedList;
 
     void clusterInfo() {
         DescribeClusterResult result = admin.describeCluster();
@@ -273,6 +278,14 @@ public class KafkaHandler extends AppHandler {
             consumer.get().close();
             consumer.set(null);
         }
+
+        if (output != null) {
+            try {
+                output.waitThread();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public String dumpLoad() {
@@ -288,6 +301,23 @@ public class KafkaHandler extends AppHandler {
         props.put("bootstrap.servers", command.get("host"));
 
         topicLoop = command.getInt("topic.loop");
+
+        if (command.isRead()) {
+            if (command.exist("consumer.extract")) {
+                output = new OutputSource();
+                output.initialize(command, command.dataPath());
+
+                filedList = new ArrayList<>();
+                String[] fields = command.get("consumer.extract").split("[, ]");
+
+                for (int i = 0; i < fields.length; i++) {
+                    if (fields[i].trim().isEmpty()) {
+                        continue;
+                    }
+                    filedList.add(Integer.valueOf(fields[i]));
+                }
+            }
+        }
     }
 
     /**
@@ -494,11 +524,11 @@ public class KafkaHandler extends AppHandler {
                 return -1;
             }
 
-            if (list.size() == 1) {
+            if (wrap.array.length == 1) {
                 producer.send(new ProducerRecord<>(nextTopic(),
                         list.get(0).isString() ? (String) wrap.array[0] : wrap.array[0].toString()));
 
-            } else if (list.size() == 2) {
+            } else if (wrap.array.length == 2) {
                 producer.send(new ProducerRecord<>(nextTopic(),
                         list.get(0).isString() ? (String) wrap.array[0] : wrap.array[0].toString(),
                         list.get(1).isString() ? (String) wrap.array[1] : wrap.array[1].toString()));
@@ -511,6 +541,7 @@ public class KafkaHandler extends AppHandler {
                     }
                     sb.append(wrap.array[index]);
                 }
+
                 producer.send(new ProducerRecord<>(nextTopic(),
                         list.get(0).isString() ? (String) wrap.array[0] : wrap.array[0].toString(),
                         sb.toString()));
@@ -541,12 +572,31 @@ public class KafkaHandler extends AppHandler {
                     if (command.table.dump_select) {
                         log.info("recv data, {}", record);
                     }
+
+                    if (output != null) {
+                        String line = "";
+                        String[] list = record.value().split(",");
+
+                        if (filedList.size() == 1) {
+                            line = list[filedList.get(0)];
+
+                        } else {
+                            StringBuffer sb = new StringBuffer();
+                            for (Integer index : filedList) {
+                                if (filedList.get(0) != index) {
+                                    sb.append(',');
+                                }
+                                sb.append(list[index]);
+                            }
+                            line = sb.toString();
+                        }
+                        output.add(line);
+                    }
                 }
             }
         } catch (Exception e) {
             log.info("read data, failed {}", e);
         }
-
 
         if (result[0] == 0) {
 
@@ -554,6 +604,9 @@ public class KafkaHandler extends AppHandler {
 
             } else {
                 log.info("read get null, completed");
+                if (output != null) {
+                    output.complete();
+                }
                 return -1;
             }
         }
@@ -561,5 +614,4 @@ public class KafkaHandler extends AppHandler {
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 }
