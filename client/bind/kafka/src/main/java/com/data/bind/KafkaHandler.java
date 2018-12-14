@@ -93,6 +93,7 @@ public class KafkaHandler extends AppHandler {
 
     private Properties props = new Properties();
     ArrayList<String> topicList = new ArrayList<>();
+    ArrayList<TopicPartition> partitionList = new ArrayList<>();
 
     private AdminClient admin;
 
@@ -109,7 +110,7 @@ public class KafkaHandler extends AppHandler {
      */
     static protected ThreadLocal<Consumer<String, String>> consumer = new ThreadLocal<>();
     static final ThreadLocal<Boolean> consumerInitial = new ThreadLocal<Boolean>();
-    private java.time.Duration poolTime = Duration.ofMillis(1000);
+    private java.time.Duration poolTime = Duration.ofMillis(30000);
 
     void clusterInfo() {
         DescribeClusterResult result = admin.describeCluster();
@@ -373,7 +374,22 @@ public class KafkaHandler extends AppHandler {
             /**
              * 订购所有的topic
              */
-            consumer.get().subscribe(topicList);
+            //consumer.get().subscribe(topicList);
+            ArrayList<TopicPartition> list = new ArrayList<>();
+            for (int i = index; i < partitionList.size(); i += command.param.thread) {
+                list.add(partitionList.get(i));
+            }
+
+            if (list.size() > 0) {
+                consumer.get().assign(list);
+                consumer.get().seekToBeginning(list);
+                log.info("thread {} assign: {}", index, consumer.get().assignment());
+
+            } else {
+                log.warn("thread {} assign no partition, [read thread {}] > [partition count {}]",
+                        index, command.param.thread, partitionList.size());
+                System.exit(-1);
+            }
         }
     }
 
@@ -432,33 +448,18 @@ public class KafkaHandler extends AppHandler {
 
         createTopic(createList);
 
+        listPartition();
+
         initTopic();
-
-        resetConsumer();
-
-        //int max_count = 2;
-        //if (command.schema.list.size() > max_count) {
-        //    log.info("======> kafka only need 1 field, fix schema");
-        //    command.schema.limit(max_count);
-        //}
     }
 
-    /**
-     * 当前不用此方式进行 reset
-     */
-    protected void resetConsumer() {
-        //if (command.isRead()) {
-        //    createConsumer(0);
-        //
-        //    for (String topic : topicList) {
-        //        List<TopicPartition> list = new ArrayList<>();
-        //        for (TopicPartitionInfo info : descTopic(topic).partitions()) {
-        //            list.add(new TopicPartition(topic, info.partition()));
-        //        }
-        //        consumer.get().assign(list);
-        //        consumer.get().seekToBeginning(list);
-        //    }
-        //}
+    private void listPartition() {
+        for (String topic : topicList) {
+
+            for (TopicPartitionInfo info : descTopic(topic).partitions()) {
+                partitionList.add(new TopicPartition(topic, info.partition()));
+            }
+        }
     }
 
     private void initTopic() {
@@ -548,20 +549,12 @@ public class KafkaHandler extends AppHandler {
 
 
         if (result[0] == 0) {
-            if (consumerInitial.get() == null) {
-                consumerInitial.set(true);
-                /**
-                 * 只有执行一次读取之后，才会分配 partition 下来
-                 */
-                log.info("thread assignment: {}", consumer.get().assignment());
-                consumer.get().seekToBeginning(consumer.get().assignment());
+
+            if (command.getBool("consumer.always")) {
 
             } else {
-                if (command.getBool("consumer.always")) {
-                } else {
-                    log.info("read get null, completed");
-                    return -1;
-                }
+                log.info("read get null, completed");
+                return -1;
             }
         }
         return 1;

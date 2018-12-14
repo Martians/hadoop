@@ -33,16 +33,16 @@
             <groupId>com.data</groupId>
             <artifactId>kafka</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.data</groupId>
-            <artifactId>redis</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>com.data</groupId>-->
+            <!--<artifactId>redis</artifactId>-->
+            <!--<version>0.0.1-SNAPSHOT</version>-->
+        <!--</dependency>-->
 
-        <dependency>
-            <groupId>com.data</groupId>
-            <artifactId>ignite</artifactId>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>com.data</groupId>-->
+            <!--<artifactId>ignite</artifactId>-->
+        <!--</dependency>-->
         <!--<dependency>-->
         <!--<groupId>com.data</groupId>-->
         <!--<artifactId>mapr</artifactId>-->
