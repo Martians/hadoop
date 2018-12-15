@@ -104,7 +104,7 @@ kafka:
   consumer:
     group: group_test
     client: client-test
-    extract: 1
+#    extract: 1
 
 ---
 redis:
@@ -139,19 +139,19 @@ redis:
 
 ---
 ignite:
-  client: true
-  file: example-cache.xml
+  client: false
+#  config: example-cache.xml
 
   thin:
-    open: true
+    open: false
 #    host: 192.168.0.80:10800
-    host: 192.168.80.51:10800
+    host: 127.0.0.1
 
   table:
     schema: String(10), String(64)
 
   work:
-    type: write
-    total: 100000
+    type: read
+    total: 10000000
     thread: 10
-    throttle: 100
+    throttle: 0

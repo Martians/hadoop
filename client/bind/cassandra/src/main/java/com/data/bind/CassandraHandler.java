@@ -10,8 +10,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Iterator;
 import java.util.List;
 
-import static com.data.base.Command.Type.read;
-import static com.data.base.Command.Type.scan;
 
 /**
     docker rm -f cassandra scylla

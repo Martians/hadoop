@@ -11,9 +11,14 @@ import org.apache.ignite.client.ClientCache;
 import org.apache.ignite.client.IgniteClient;
 import org.apache.ignite.configuration.CacheConfiguration;
 import org.apache.ignite.configuration.ClientConfiguration;
+import org.apache.ignite.configuration.IgniteConfiguration;
+import org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi;
+import org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -84,6 +89,8 @@ public class IgniteHandler extends AppHandler {
     }
 
     protected void connecting() {
+        String[] servers = command.get("thin.host").split(",");
+
         if (useThin) {
             /**
              * thin client模式
@@ -91,7 +98,6 @@ public class IgniteHandler extends AppHandler {
              *      https://apacheignite.readme.io/docs/java-thin-client
              *      https://apacheignite.readme.io/docs/ssltls
              */
-            String[] servers = command.get("thin.host").split(",");
             ClientConfiguration cfg = new ClientConfiguration().setAddresses(servers);
 
             thinClient = Ignition.startClient(cfg);
@@ -100,15 +106,31 @@ public class IgniteHandler extends AppHandler {
         } else {
             Ignition.setClientMode(command.getBool("client"));
 
-            String path = command.get("file");
-            if (Disk.fileExist(path, false)) {
+            if (command.exist("config")) {
+                String path = command.get("config");
+                if (!Disk.fileExist(path, false)) {
+                    if (Disk.fileExist(path, true)) {
+                        path = Disk.resourcePath(path);
+                    } else {
+                        log.warn("can't find config file {}", path);
+                    }
+                }
+                ignite = Ignition.start(path);
 
-            } else if (Disk.fileExist(path, true)) {
-                path = Disk.resourcePath(path);
+            } else {
+                TcpDiscoveryVmIpFinder ipFinder = new TcpDiscoveryVmIpFinder();
+                ipFinder.setAddresses(Arrays.asList(servers));
+
+                TcpDiscoverySpi discoverySpi = new TcpDiscoverySpi();
+                discoverySpi.setIpFinder(ipFinder);
+
+                IgniteConfiguration cfg = new IgniteConfiguration();
+                cfg.setPeerClassLoadingEnabled(true);
+                cfg.setDiscoverySpi(discoverySpi);
+
+                ignite = Ignition.start(cfg);
             }
 
-            ignite = Ignition.start(path);
-			
             CacheConfiguration<String, String> cfg = new CacheConfiguration<>();
             cfg.setCacheMode(CacheMode.PARTITIONED);
             cfg.setBackups(0);

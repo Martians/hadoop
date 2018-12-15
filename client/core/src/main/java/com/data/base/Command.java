@@ -19,18 +19,26 @@ import java.nio.file.Path;
 import java.util.*;
 
 
-import static com.data.base.Command.Type.read;
-import static com.data.base.Command.Type.scan;
+import static com.data.base.Command.Type.*;
 import static com.data.util.disk.Disk.traversePath;
 
 public class Command extends BaseCommand {
 
     public static enum Type {
+
+        /** 内存生成数据，写入到系统 */
         write,
-        read,
-        scan,
+        /** 文件读取数据，写入到系统 */
         load,
+        /** 内存生成数据，写入到文件 */
         generate,
+
+        /** 内存生成数据，从系统读取 */
+        read,
+        /** 文件读取数据，从系统读取 */
+        fetch,
+        /** 从系统读取所有数据 */
+        scan,
         end,
     };
 
@@ -225,7 +233,7 @@ public class Command extends BaseCommand {
     }
 
     void checkParam() {
-        if (containStep(Type.load) || containStep(Type.generate)) {
+        if (containStep(Type.load) || containStep(Type.generate) || containStep(Type.fetch)) {
             if (!exist("gen.data_path")) {
                 log.info("generate data, but not command path, command default");
             }
@@ -242,7 +250,11 @@ public class Command extends BaseCommand {
     }
 
     public boolean isRead() {
-        return type.equals(read) || type.equals(scan);
+        return type.equals(read) || type.equals(scan) || type.equals(fetch);
+    }
+
+    public boolean isWrite() {
+        return type.equals(write) || type.equals(load);
     }
 
     public boolean emptyForbiden() {
@@ -272,7 +284,7 @@ public class Command extends BaseCommand {
             set("table.keyspace", host);
         }
 
-        if (workp.throttle != 0) {
+        if (workp.throttle > 0) {
             if (workp.fetch * param.thread > param.total) {
                 int fetch = Math.max(param.total.intValue() / param.thread, 1);
                 log.info("throttle {}, set fetch {} -> {}", workp.throttle, workp.fetch, fetch);
@@ -313,15 +325,10 @@ public class Command extends BaseCommand {
 
             currStep(type.toString());
 
-            //param.thread = getInt("work.thread");
-            if (type == Type.read && exist("gen.data_path")) {
-                int read_thread = getInt("work.read_thread");
-                if (read_thread != 0) {
-                    param.thread = read_thread;
-                    log.info("change next step. read step use thread {}", param.thread);
-                }
+            if (type == Type.read) {
+                param.thread = getInt("work.read_thread");
+                log.info("change next step. read step use thread {}", param.thread);
             }
-
         }
         return type != null;
     }
@@ -475,7 +482,7 @@ public class Command extends BaseCommand {
         /**
          * use random read mode, will not ignore any empty command
          */
-        if (type == Type.read && !exist("gen.data_path")) {
+        if (isRead()) {
             table.read_empty = 0;
         }
     }

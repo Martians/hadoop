@@ -24,9 +24,6 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
-import static com.data.base.Command.Type.scan;
-import static com.data.base.Command.Type.read;
-
 /**
  * API：http://kafka.apache.org/20/javadoc/index.html?overview-summary.html
  *
@@ -109,6 +106,7 @@ public class KafkaHandler extends AppHandler {
 
     /**
      * consumer
+     *      poolTime 如果设置太短，会导致尚未连接成功，read时就超时返回了
      */
     static protected ThreadLocal<Consumer<String, String>> consumer = new ThreadLocal<>();
     //static final ThreadLocal<Boolean> consumerInitial = new ThreadLocal<Boolean>();
@@ -335,7 +333,7 @@ public class KafkaHandler extends AppHandler {
     }
 
     void createProducer() {
-        if (command.type == Command.Type.write || command.type == Command.Type.load) {
+        if (command.isWrite()) {
             Properties config = new Properties();
             config.putAll(props);
 
@@ -435,7 +433,7 @@ public class KafkaHandler extends AppHandler {
         }
 
         boolean ignore_clear = false;
-        if (command.type.equals(read) || command.type.equals(scan)) {
+        if (command.isRead()) {
             log.info("current mode is read, ignore clear");
             ignore_clear = true;
         }
@@ -572,26 +570,7 @@ public class KafkaHandler extends AppHandler {
                     if (command.table.dump_select) {
                         log.info("recv data, {}", record);
                     }
-
-                    if (output != null) {
-                        String line = "";
-                        String[] list = record.value().split(",");
-
-                        if (filedList.size() == 1) {
-                            line = list[filedList.get(0)];
-
-                        } else {
-                            StringBuffer sb = new StringBuffer();
-                            for (Integer index : filedList) {
-                                if (filedList.get(0) != index) {
-                                    sb.append(',');
-                                }
-                                sb.append(list[index]);
-                            }
-                            line = sb.toString();
-                        }
-                        output.add(line);
-                    }
+                    extract(record.value());
                 }
             }
         } catch (Exception e) {
@@ -599,7 +578,6 @@ public class KafkaHandler extends AppHandler {
         }
 
         if (result[0] == 0) {
-
             if (command.getBool("consumer.always")) {
 
             } else {
@@ -611,6 +589,28 @@ public class KafkaHandler extends AppHandler {
             }
         }
         return 1;
+    }
+
+    protected void extract(String value) {
+        if (output != null) {
+            String line = "";
+            String[] list = value.split(",");
+
+            if (filedList.size() == 1) {
+                line = list[filedList.get(0)];
+
+            } else {
+                StringBuffer sb = new StringBuffer();
+                for (Integer index : filedList) {
+                    if (filedList.get(0) != index) {
+                        sb.append(',');
+                    }
+                    sb.append(list[index]);
+                }
+                line = sb.toString();
+            }
+            output.add(line);
+        }
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
