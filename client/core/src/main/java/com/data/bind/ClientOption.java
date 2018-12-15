@@ -23,7 +23,7 @@ public class ClientOption {
              *          2）input file with full data，also used for write
              *          3）input file with keys data，generate by scan
              */
-            addOption("type",  "write、read、scan; load、generate", "write");
+            addOption("type",  "write、read、scan; load、generate、fetch", "write");
             addOption("read_thread",  "specific read thread", 0);
 
             /**

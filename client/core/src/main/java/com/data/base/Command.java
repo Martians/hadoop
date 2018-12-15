@@ -325,7 +325,7 @@ public class Command extends BaseCommand {
 
             currStep(type.toString());
 
-            if (type == Type.read) {
+            if (isRead()) {
                 param.thread = getInt("work.read_thread");
                 log.info("change next step. read step use thread {}", param.thread);
             }
@@ -444,15 +444,16 @@ public class Command extends BaseCommand {
         DataSource source = null;
 
         switch (type) {
-            case read:
-                source = new DataSource();
+            case read:  source = new DataSource();
                 break;
             case write:
             case generate: source = new DataSource();
                 break;
 
-            case load:  source = new InputSource();
+            case load:
+            case fetch: source = new InputSource();
                 break;
+
             case scan:  source = new ScanSource();
                 break;
             default:
@@ -470,11 +471,11 @@ public class Command extends BaseCommand {
         //    log.warn("no need add source");
         //    System.exit(-1);
         //}
-
-        if (source instanceof InputSource) {
-        }
-
         source.initialize(this, schema, dataPath());
+
+        if (type == fetch) {
+            ((InputSource)source).onlyKey(true);
+        }
         return source;
     }
 

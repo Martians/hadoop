@@ -18,8 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Array;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 
 /**
@@ -44,6 +43,12 @@ import java.util.List;
  *              1）关闭远端服务器，否则本地server会和远端server组成集群
  *              2）本地 setClientMode 设置为 false
  *
+ * 使用
+ *      1. 本地测试：client=false，本地启动server和client
+ *      2. 远端测试：client=true， 本地指启动client
+ *
+ *      bin/ignite.sh examples/config/example-ignite.xml
+ *
  */
 public class IgniteHandler extends AppHandler {
     final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -51,7 +56,8 @@ public class IgniteHandler extends AppHandler {
     public static class Option extends com.data.util.command.BaseOption {
         public Option() {
             addOption("client", "client or server", false);
-            addOption("file", "server config file", "example-cache.xml");
+            addOption("cache", "cache name", "test");
+            addOption("file", "server config file", "");
 
             addOption("thin.open", "use thin client", true);
             addOption("thin.host", "thin client host", "");
@@ -86,11 +92,14 @@ public class IgniteHandler extends AppHandler {
         }
 
         useThin = command.getBool("thin.open");
+
+        if (useThin && command.param.batch > 1) {
+            command.param.batch = 1;
+            log.info("resolve param, use thin client, reset batch to 1");
+        }
     }
 
     protected void connecting() {
-        String[] servers = command.get("thin.host").split(",");
-
         if (useThin) {
             /**
              * thin client模式
@@ -98,6 +107,7 @@ public class IgniteHandler extends AppHandler {
              *      https://apacheignite.readme.io/docs/java-thin-client
              *      https://apacheignite.readme.io/docs/ssltls
              */
+            String[] servers = command.get("thin.host").split(",");
             ClientConfiguration cfg = new ClientConfiguration().setAddresses(servers);
 
             thinClient = Ignition.startClient(cfg);
@@ -106,8 +116,8 @@ public class IgniteHandler extends AppHandler {
         } else {
             Ignition.setClientMode(command.getBool("client"));
 
-            if (command.exist("config")) {
-                String path = command.get("config");
+            if (command.exist("file")) {
+                String path = command.get("file");
                 if (!Disk.fileExist(path, false)) {
                     if (Disk.fileExist(path, true)) {
                         path = Disk.resourcePath(path);
@@ -118,6 +128,14 @@ public class IgniteHandler extends AppHandler {
                 ignite = Ignition.start(path);
 
             } else {
+                String[] servers;
+                if (command.getBool("client")) {
+                    servers = command.get("host").split(",");
+
+                } else {
+                    servers = "127.0.0.1".split(",");
+                }
+
                 TcpDiscoveryVmIpFinder ipFinder = new TcpDiscoveryVmIpFinder();
                 ipFinder.setAddresses(Arrays.asList(servers));
 
@@ -134,7 +152,7 @@ public class IgniteHandler extends AppHandler {
             CacheConfiguration<String, String> cfg = new CacheConfiguration<>();
             cfg.setCacheMode(CacheMode.PARTITIONED);
             cfg.setBackups(0);
-            cfg.setName("test");
+            cfg.setName(command.get("cache"));
 
             cache = ignite.getOrCreateCache(cfg);
             log.info("connecting complete");
@@ -166,33 +184,58 @@ public class IgniteHandler extends AppHandler {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     @Override
     public int write(int[] result, int batch) {
-        for (int i = 0; i < batch; i++) {
 
+        if (batch == 1) {
             DataSource.Wrap wrap = source.next();
             if (wrap == null) {
                 log.debug("write get null, completed");
                 return -1;
             }
+
             if (useThin) {
                 thinClientCache.put((String) wrap.array[0], (String) wrap.array[1]);
-
             } else {
                 cache.put((String) wrap.array[0], (String) wrap.array[1]);
             }
 
             result[0] += 1;
             result[1] += wrap.size;
+
+        } else {
+            HashMap<String, String> map = new HashMap<>();
+            for (int i = 0; i < batch; i++) {
+
+                DataSource.Wrap wrap = source.next();
+                if (wrap == null) {
+                    break;
+                }
+                map.put((String) wrap.array[0], (String) wrap.array[1]);
+
+                result[0] += 1;
+                result[1] += wrap.size;
+            }
+
+            if (map.size() > 0) {
+                cache.putAll(map);
+
+            } else {
+                log.debug("write get null, completed");
+                return -1;
+            }
         }
         return 1;
     }
 
     @Override
     public int read(int[] result, int batch) {
-        while (result[0] < batch) {
-
+        if (batch == 1) {
             DataSource.Wrap wrap = source.next();
-            String data;
+            if (wrap == null) {
+                log.debug("read get null, completed");
+                return -1;
+            }
 
+            String data;
             if (useThin) {
                 data = thinClientCache.get((String) wrap.array[0]);
 
@@ -208,6 +251,28 @@ public class IgniteHandler extends AppHandler {
 
             result[0] += 1;
             result[1] += wrap.size;
+
+        } else {
+            HashSet<String> set = new HashSet<>();
+
+            while (result[0] < batch) {
+                DataSource.Wrap wrap = source.next();
+                if (wrap == null) {
+                    break;
+                }
+                set.add((String) wrap.array[0]);
+
+                result[0] += 1;
+                result[1] += wrap.size;
+            }
+
+            if (set.size() > 0) {
+                Map map = cache.getAll(set);
+
+            } else {
+                log.debug("read get null, completed");
+                return -1;
+            }
         }
         return 1;
     }

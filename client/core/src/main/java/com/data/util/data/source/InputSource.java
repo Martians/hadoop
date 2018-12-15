@@ -28,6 +28,11 @@ public class InputSource extends DataSource implements Runnable {
     MemCache cache;
     Thread  thread;
     boolean verify;
+    boolean usekey;
+
+    public void onlyKey(boolean set) {
+        usekey = set;
+    }
 
     @Override
     public void initialize(BaseCommand command, DataSchema schema, String path) {
@@ -61,7 +66,13 @@ public class InputSource extends DataSource implements Runnable {
             return null;
         }
 
-        if (verify) {
+        if (usekey) {
+            int index = line.indexOf(',');
+            if (index >= 0) {
+                line = line.substring(0, index);
+            }
+
+        } else if (verify) {
             int size = 0;
             int nums = 0;
 
@@ -89,12 +100,11 @@ public class InputSource extends DataSource implements Runnable {
                 }
             }
             return new Wrap(array, size);
-
-        } else {
-            Object[] array = new Object[1];
-            array[0] = line;
-            return new Wrap(array, line.length());
         }
+
+        Object[] array = new Object[1];
+        array[0] = line;
+        return new Wrap(array, line.length());
     }
 
     public void loadFiles() {

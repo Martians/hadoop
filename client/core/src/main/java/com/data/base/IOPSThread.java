@@ -88,9 +88,12 @@ public class IOPSThread extends Thread {
                     case load:
                         handler.performWrite(success);
                         break;
+
                     case read:
+                    case fetch:
                         handler.performRead(success);
                         break;
+
                     case scan:
                         handler.performScan(success);
                         break;
