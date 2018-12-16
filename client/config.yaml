@@ -143,7 +143,8 @@ ignite:
   host: 192.168.127.11
 #  file: example-cache.xml
   client: true
-  class: cn.nimblex.ivylite.TreeMapBasedContainer
+#  class: cn.nimblex.ivylite.TreeMapBasedContainer
+#  method: dump
 
   thin:
     open: false

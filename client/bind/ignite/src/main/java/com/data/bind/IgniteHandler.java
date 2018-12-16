@@ -17,6 +17,7 @@ import org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Method;
 import java.util.*;
 
 /**
@@ -59,7 +60,8 @@ public class IgniteHandler extends AppHandler {
             addOption("client", "client or server", false);
             addOption("cache", "cache name", "test");
             addOption("file", "server config file", "");
-            addOption("class", "server config file", "java.lang.String");
+            addOption("class", "dynamic class", "java.lang.String");
+            addOption("method", "dynamic method", "toString");
 
             addOption("thin.open", "use thin client", true);
             addOption("thin.host", "thin client host", "");
@@ -81,8 +83,9 @@ public class IgniteHandler extends AppHandler {
     IgniteCache cache;
 
     boolean useThin;
-    Class<?> factory = null;
 
+    Class<?> factory = null;
+    Method method = null;
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     protected void resolveParam() {
         List<DataSchema.Item> list = command.schema.list;
@@ -132,6 +135,7 @@ public class IgniteHandler extends AppHandler {
 
             } else {
                 loadValueClass(false);
+                loadValueMethod();
 
                 String[] servers;
                 if (command.getBool("client")) {
@@ -192,6 +196,16 @@ public class IgniteHandler extends AppHandler {
         return factory;
    }
 
+   protected void loadValueMethod() {
+       try {
+           method = factory.getMethod(command.get("method"));
+
+       } catch (Exception e) {
+           log.warn("load method {}.{} failed, {}", command.get("class"), command.get("method"), e);
+           System.exit(-1);
+       }
+   }
+
     protected void preparing() {
         if (command.getBool("clear")) {
             ignite.destroyCache(cacheName);
@@ -228,6 +242,17 @@ public class IgniteHandler extends AppHandler {
         return object;
     }
 
+    private Object callMethod(Object object) {
+        try {
+            return method.invoke(object);
+
+        } catch (Exception e) {
+            log.warn("call method {} failed, {}", command.get("method"), e);
+            System.exit(-1);
+            return null;
+        }
+    }
+
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     @Override
@@ -242,6 +267,7 @@ public class IgniteHandler extends AppHandler {
 
             if (useThin) {
                 thinClientCache.put((String) wrap.array[0], (String) wrap.array[1]);
+
             } else {
                 cache.put((String) wrap.array[0], cast(wrap.array[1]));
             }
@@ -297,6 +323,9 @@ public class IgniteHandler extends AppHandler {
                 if (command.emptyForbiden()) {
                     return -1;
                 }
+
+            } else if (command.table.read_dump) {
+                log.info("recv [{}] -> {}", wrap.array[0], callMethod(data));
             }
 
             result[0] += 1;
@@ -318,7 +347,13 @@ public class IgniteHandler extends AppHandler {
 
             if (set.size() > 0) {
                 Map map = cache.getAll(set);
-                int x = 1;
+
+                if (command.table.read_dump) {
+                    for (Object item : map.entrySet()) {
+                        Map.Entry<String, Object> entry = (Map.Entry<String, Object>)item;
+                        log.info("recv [{}] -> {}", entry.getKey(), callMethod(entry.getValue()));
+                    }
+                }
 
             } else {
                 log.debug("read get null, completed");
