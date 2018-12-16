@@ -58,7 +58,7 @@ public class Command extends BaseCommand {
     public WorkParam workp;
 
     public class TableParam {
-        public boolean dump_select = getBool("table.dump_select");
+        public boolean read_dump = getBool("table.read_dump");
         public long read_empty = getLong("table.read_empty");
     }
     public TableParam table;
@@ -355,34 +355,13 @@ public class Command extends BaseCommand {
         regist(bind, option);
     }
 
-    /**
-     * https://blog.csdn.net/qq_32718869/article/details/81288076
-     * https://bbs.csdn.net/topics/390077862
-     *      https://lorry1113.iteye.com/blog/973903
-     *      https://blog.csdn.net/langwang1993/article/details/80536872
-     */
-    public void parseNew() {
-        String name = "com.data.base.IOPSThread";
-        try {
-            Class factory = Class.forName(name);
-            java.lang.reflect.Type type = factory.getGenericSuperclass();
-            Object a = Array.newInstance(factory, 1);
-            log.info("{}", a.getClass());
-
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        System.exit(-1);
-
-    }
-
     Class<?> parseClass(String bind, String suffix, Class<?> clazz, Boolean retry) {
         String name = "com.data.bind." + bind + suffix;
         Class<?> factory = null;
 
         try {
-                factory = Class.forName(name).asSubclass(clazz);
+            factory = Class.forName(name).asSubclass(clazz);
+
             /**
              *  方法2）只能找到单一类，而不是整个jar
                  URL url = new URL("file:hbase-0.0.1-SNAPSHOT.jar");
@@ -412,21 +391,25 @@ public class Command extends BaseCommand {
                  *      ExtClassPathLoader 增加对 class file 的 load，而不仅仅是 jar
                  **/
 
-                /**
-                 * debug time
-                 */
-                ExtClassPathLoader.loadClasspath("bind/" + bind.toLowerCase() + "/target");
-                ExtClassPathLoader.loadClasspath("main/target/bind/" + bind.toLowerCase());
-
-                /**
-                 * runtime
-                 */
-                ExtClassPathLoader.loadClasspath("lib");
-                ExtClassPathLoader.loadClasspath("bind");
+                dynamicLoad(bind);
                 return parseClass(bind, suffix, clazz,true);
             }
         }
         return factory;
+    }
+
+    public void dynamicLoad(String bind) {
+        /**
+         * debug time
+         */
+        ExtClassPathLoader.loadClasspath("bind/" + bind.toLowerCase() + "/target");
+        ExtClassPathLoader.loadClasspath("main/target/bind/" + bind.toLowerCase());
+
+        /**
+         * runtime
+         */
+        ExtClassPathLoader.loadClasspath("lib");
+        ExtClassPathLoader.loadClasspath("bind");
     }
 
     AppHandler createAppHandler() {

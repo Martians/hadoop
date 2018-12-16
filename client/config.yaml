@@ -44,6 +44,7 @@ global:
     table: test
     replica: 1
     read_empty: 1000
+    read_dump: false
 
 ---
 cassandra:
@@ -142,6 +143,7 @@ ignite:
   host: 192.168.127.11
 #  file: example-cache.xml
   client: true
+  class: cn.nimblex.ivylite.TreeMapBasedContainer
 
   thin:
     open: false
@@ -149,12 +151,13 @@ ignite:
 
   table:
     schema: String(10), String(64)
+    read_dump: true
 
   work:
     type: fetch
     total: 10000
     thread: 10
-    batch: 100
+    batch: 10
 
     throttle: 0
     read_thread: 8

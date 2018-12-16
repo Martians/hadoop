@@ -17,38 +17,39 @@ import org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Array;
 import java.util.*;
 
-
 /**
+ * 	clien类型
+ * 	    1. useThin：访问端口与normal client不同，默认10800
+ * 	         服务配置：<property name="peerClassLoadingEnabled" value="true"/>
+ * 	                 不需要专门配置端口，默认已经启动了监听的端口
+ * 	         服务启动：直接 bin/ignite.sh即可
  *
- * 两种client
- *      1. useThin：访问端口与normal client不同，默认10800
- *              配置：<property name="peerClassLoadingEnabled" value="true"/>
- *                    不需要专门配置端口，默认已经启动了监听的端口
+ * 		2. normal：可以指定配置文件，或者通过程序配置
+ * 			文件方式
+ * 				配置：examples/config/example-cache.xml 作为模板，修改ip地址
+ * 				启动：bin/ignite.sh examples/config/example-cache.xml
  *
- *              启动：直接 bin/ignite.sh即可
+ * 			程序方式：
+ * 				配置：可以添加 <property name="peerClassLoadingEnabled" value="true"/>
+ * 	     		启动：bin/ignite.sh examples/config/example-ignite.xml
  *
- *      2. normal：必须指定配置文件
- *              配置：examples/config/example-cache.xml 作为模板，修改ip地址
- *              启动：bin/ignite.sh examples/config/example-cache.xml
+ * 	分离融合（normal模式下，client、server是否在一起）
+ *      1. 分离模式
+ *      	1）client模式：client=true, 本地不启动server，数据发送到远端server
+ *          2）远端服务启动：bin/ignite.sh examples/config/example-cache.xml
  *
- * 两种模式：（normal client下）
- *      1. client模式：数据发送到远端server
- *              1）远端服务启动：bin/ignite.sh examples/config/example-cache.xml，配置文件同本地
- *              2）本地 setClientMode 设置为 true
+ *      2. 融合模式：
+ *      	1）server模式：client=false，本地启动server和client，数据存储在本地测试
+ *          2）注意：需要关闭远端服务器，否则本地server会和远端server组成集群
  *
- *      2. server模式：数据存储在本地测试
- *              1）关闭远端服务器，否则本地server会和远端server组成集群
- *              2）本地 setClientMode 设置为 false
+ *  类型系统：
+ *      1. 使用 IgniteCache<String, Test> cache
+ *      2. 使用 IgniteCache cache，后续 CacheConfiguration.setTypes
  *
- * 使用
- *      1. 本地测试：client=false，本地启动server和client
- *      2. 远端测试：client=true， 本地指启动client
- *
- *      bin/ignite.sh examples/config/example-ignite.xml
- *
+ *      测试时，使用 normal客户端，程序方式配置
+ *          bin/ignite.sh examples/config/example-ignite.xml
  */
 public class IgniteHandler extends AppHandler {
     final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -58,6 +59,7 @@ public class IgniteHandler extends AppHandler {
             addOption("client", "client or server", false);
             addOption("cache", "cache name", "test");
             addOption("file", "server config file", "");
+            addOption("class", "server config file", "java.lang.String");
 
             addOption("thin.open", "use thin client", true);
             addOption("thin.host", "thin client host", "");
@@ -79,6 +81,7 @@ public class IgniteHandler extends AppHandler {
     IgniteCache cache;
 
     boolean useThin;
+    Class<?> factory = null;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     protected void resolveParam() {
@@ -128,6 +131,8 @@ public class IgniteHandler extends AppHandler {
                 ignite = Ignition.start(path);
 
             } else {
+                loadValueClass(false);
+
                 String[] servers;
                 if (command.getBool("client")) {
                     servers = command.get("host").split(",");
@@ -149,8 +154,9 @@ public class IgniteHandler extends AppHandler {
                 ignite = Ignition.start(cfg);
             }
 
+            //CacheConfiguration<String, Test> cfg = new CacheConfiguration<>();
             CacheConfiguration cfg = new CacheConfiguration<>();
-            cfg.setTypes(String.class, String.class);
+            cfg.setTypes(String.class, factory);
 
             cfg.setCacheMode(CacheMode.PARTITIONED);
             cfg.setBackups(0);
@@ -160,6 +166,31 @@ public class IgniteHandler extends AppHandler {
             log.info("connecting complete");
         }
     }
+
+    /**
+     * https://blog.csdn.net/qq_32718869/article/details/81288076
+     * https://bbs.csdn.net/topics/390077862
+     *      https://lorry1113.iteye.com/blog/973903
+     *      https://blog.csdn.net/langwang1993/article/details/80536872
+     *
+     * Object a = Array.newInstance(factory, 1);
+     */
+    protected Class<?> loadValueClass(boolean retry) {
+        try {
+            factory = Class.forName(command.get("class"));
+
+        } catch (ClassNotFoundException e) {
+            if (retry) {
+                log.warn("load class {} failed, {}", command.get("class"), e);
+                System.exit(-1);
+
+            } else {
+                command.dynamicLoad("");
+                return loadValueClass(true);
+            }
+        }
+        return factory;
+   }
 
     protected void preparing() {
         if (command.getBool("clear")) {
@@ -182,6 +213,21 @@ public class IgniteHandler extends AppHandler {
         return "";
     }
 
+    /**
+     * only for test
+     */
+    private Object cast(Object object) {
+        try {
+            return factory.newInstance();
+
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return object;
+    }
+
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     @Override
@@ -197,7 +243,7 @@ public class IgniteHandler extends AppHandler {
             if (useThin) {
                 thinClientCache.put((String) wrap.array[0], (String) wrap.array[1]);
             } else {
-                cache.put((String) wrap.array[0], (String) wrap.array[1]);
+                cache.put((String) wrap.array[0], cast(wrap.array[1]));
             }
 
             result[0] += 1;
@@ -212,7 +258,7 @@ public class IgniteHandler extends AppHandler {
                 if (wrap == null) {
                     break;
                 }
-                map.put((String) wrap.array[0], (Object) wrap.array[1]);
+                map.put((String) wrap.array[0], cast(wrap.array[1]));
 
                 result[0] += 1;
                 result[1] += wrap.size;
@@ -226,6 +272,7 @@ public class IgniteHandler extends AppHandler {
                 return -1;
             }
         }
+
         return 1;
     }
 

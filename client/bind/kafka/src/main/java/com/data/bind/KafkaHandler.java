@@ -1,6 +1,5 @@
 package com.data.bind;
 
-import com.data.base.Command;
 import com.data.base.IOPSThread;
 import com.data.util.data.source.DataSource;
 
@@ -567,7 +566,7 @@ public class KafkaHandler extends AppHandler {
                     result[0] += 1;
                     result[1] += record.serializedKeySize() + record.serializedValueSize();
 
-                    if (command.table.dump_select) {
+                    if (command.table.read_dump) {
                         log.info("recv data, {}", record);
                     }
                     extract(record.value());
