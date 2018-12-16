@@ -29,8 +29,9 @@ import java.util.*;
  *
  * 		2. normal：可以指定配置文件，或者通过程序配置
  * 			文件方式
- * 				配置：examples/config/example-cache.xml 作为模板，修改ip地址
+ * 				配置：examples/config/example-cache.xml 作为模板; 并修改访问server的ip地址
  * 				启动：bin/ignite.sh examples/config/example-cache.xml
+ * 			    注意：配置文件复制到 main/resources下边
  *
  * 			程序方式：
  * 				配置：可以添加 <property name="peerClassLoadingEnabled" value="true"/>
@@ -106,6 +107,9 @@ public class IgniteHandler extends AppHandler {
     }
 
     protected void connecting() {
+        loadValueClass(false);
+        loadValueMethod();
+
         if (useThin) {
             /**
              * thin client模式
@@ -134,8 +138,6 @@ public class IgniteHandler extends AppHandler {
                 ignite = Ignition.start(path);
 
             } else {
-                loadValueClass(false);
-                loadValueMethod();
 
                 String[] servers;
                 if (command.getBool("client")) {

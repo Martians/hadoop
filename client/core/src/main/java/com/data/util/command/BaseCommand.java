@@ -2,6 +2,7 @@ package com.data.util.command;
 
 import com.data.util.common.Formatter;
 import com.data.util.disk.Disk;
+import com.data.util.sys.ExtClassPathLoader;
 import com.data.util.sys.Reflect;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
@@ -75,6 +76,7 @@ public class BaseCommand {
             addOption("c,config", "config file");
             addOption("strict", "strict mode, never get unknown param", false);
             addOption("prefix", "command line prefix, 0:cancel, 1:convert [.->_]", true);
+            addOption("lib", "extra lib path", "");
             addOption("dump", "check effective config", false);
 
             addOption("host", "server host", "192.168.10.7");
@@ -341,6 +343,13 @@ public class BaseCommand {
 
     protected void validate() {
         param = new ClientParam();
+
+        /**
+         * 加载额外的lib库
+         */
+        if (exist("lib")) {
+            ExtClassPathLoader.loadClasspath(get("lib"));
+        }
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
