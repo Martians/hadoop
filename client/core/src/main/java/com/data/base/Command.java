@@ -14,6 +14,8 @@ import com.data.bind.AppHandler;
 import com.google.common.util.concurrent.RateLimiter;
 
 import java.io.File;
+import java.lang.reflect.Array;
+import java.lang.reflect.Type;
 import java.net.InetAddress;
 import java.nio.file.Path;
 import java.util.*;
@@ -351,6 +353,28 @@ public class Command extends BaseCommand {
 
         BaseOption option = createOptionParser(bind);
         regist(bind, option);
+    }
+
+    /**
+     * https://blog.csdn.net/qq_32718869/article/details/81288076
+     * https://bbs.csdn.net/topics/390077862
+     *      https://lorry1113.iteye.com/blog/973903
+     *      https://blog.csdn.net/langwang1993/article/details/80536872
+     */
+    public void parseNew() {
+        String name = "com.data.base.IOPSThread";
+        try {
+            Class factory = Class.forName(name);
+            java.lang.reflect.Type type = factory.getGenericSuperclass();
+            Object a = Array.newInstance(factory, 1);
+            log.info("{}", a.getClass());
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.exit(-1);
+
     }
 
     Class<?> parseClass(String bind, String suffix, Class<?> clazz, Boolean retry) {

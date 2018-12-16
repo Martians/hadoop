@@ -76,7 +76,7 @@ public class IgniteHandler extends AppHandler {
      * normal
      */
     Ignite ignite;
-    IgniteCache<String, String> cache;
+    IgniteCache cache;
 
     boolean useThin;
 
@@ -149,7 +149,9 @@ public class IgniteHandler extends AppHandler {
                 ignite = Ignition.start(cfg);
             }
 
-            CacheConfiguration<String, String> cfg = new CacheConfiguration<>();
+            CacheConfiguration cfg = new CacheConfiguration<>();
+            cfg.setTypes(String.class, String.class);
+
             cfg.setCacheMode(CacheMode.PARTITIONED);
             cfg.setBackups(0);
             cfg.setName(command.get("cache"));
@@ -202,14 +204,15 @@ public class IgniteHandler extends AppHandler {
             result[1] += wrap.size;
 
         } else {
-            HashMap<String, String> map = new HashMap<>();
+            HashMap<String, Object> map = new HashMap<>();
+
             for (int i = 0; i < batch; i++) {
 
                 DataSource.Wrap wrap = source.next();
                 if (wrap == null) {
                     break;
                 }
-                map.put((String) wrap.array[0], (String) wrap.array[1]);
+                map.put((String) wrap.array[0], (Object) wrap.array[1]);
 
                 result[0] += 1;
                 result[1] += wrap.size;
@@ -235,7 +238,7 @@ public class IgniteHandler extends AppHandler {
                 return -1;
             }
 
-            String data;
+            Object data;
             if (useThin) {
                 data = thinClientCache.get((String) wrap.array[0]);
 
@@ -268,6 +271,7 @@ public class IgniteHandler extends AppHandler {
 
             if (set.size() > 0) {
                 Map map = cache.getAll(set);
+                int x = 1;
 
             } else {
                 log.debug("read get null, completed");
