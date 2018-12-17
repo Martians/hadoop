@@ -420,7 +420,7 @@ public class BaseCommand {
         }
 
         if (factory == null) {
-            log.error("parse class {} failed, make sure that bind and dependency in bind/ or lib/", name);
+            log.error("parse class [{}] failed, make sure that bind and dependency in bind/ or lib/", name);
             System.exit(-1);
 
         } else if (parent != null) {
@@ -428,6 +428,18 @@ public class BaseCommand {
         }
 
         return factory;
+    }
+
+    public Object parseInstance(String name, SingleHandler handler) {
+        Class<?> factory = parseClass(name, handler, null);
+        try {
+            return factory.newInstance();
+
+        } catch (Exception e) {
+            log.warn("create instance of [{}] failed, {}", name, e);
+            System.exit(-1);
+            return null;
+        }
     }
 
     private Class<?> parseClass(String name) {
@@ -438,20 +450,14 @@ public class BaseCommand {
         }
     }
 
-
-    /**
-     *  方法2）只能找到单一类，而不是整个jar
-         URL url = new URL("file:hbase-0.0.1-SNAPSHOT.jar");
-         URLClassLoader loader = new URLClassLoader(new URL[]{url},
-         Thread.currentThread().getContextClassLoader());
-         factory = loader.loadClass(name).asSubclass(clazz);
-     */
-    protected void dynamicClassPath(String ... paths) {
+    public void dynamicClassPath(String ... paths) {
         for (String path : paths) {
             ExtClassPathLoader.loadClasspath(path);
         }
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /**
      * 将多个配置参数分开存放
      */
@@ -493,12 +499,29 @@ public class BaseCommand {
         yamlOrProp(false);
     }
 
+    /**
+     * 必须用此函数，顺序不能变，先按位置查找：.yaml 优先于 .properties
+     */
     private void yamlOrProp(boolean resource) {
         if (Disk.fileExist(yamlConfig, resource)) {
             parseFile(yamlConfig, resource);
 
         } else if (Disk.fileExist(propConfig, resource)) {
             parseFile(propConfig, resource);
+        }
+    }
+
+    protected void parseConfig(String path, boolean force) {
+        String actual = Disk.actualPath(path);
+
+        if (actual == null) {
+            if (force) {
+                log.warn("load config [{}], but file not exist!", path);
+                System.exit(-1);
+            }
+
+        } else {
+            parseFile(actual, false);
         }
     }
 
@@ -589,9 +612,7 @@ public class BaseCommand {
          *                     在此情况下，可以使用此配置
          */
         } else {
-            if (Disk.fileExist(specConfig, false)) {
-                parseFile(specConfig, false);
-            }
+            parseConfig(specConfig, false);
         }
 
         /**
@@ -603,10 +624,23 @@ public class BaseCommand {
         }
         properties.putAll(props);
 
-        unregistCheck();
+        /**
+         * 重构代码前，先执行的是 unregistCheck()
+         */
         unregistParsed(parsed);
 
-        if (getBool("dump")) {
+        onConfigChange(true, getBool("dump"));
+    }
+
+    protected void onConfigChange(boolean strictCheck, boolean dump) {
+        /**
+         * 重新检查参数是否有未注册的
+         */
+        if (strictCheck) {
+            unregistCheck();
+        }
+
+        if (dump) {
             log.info("dump config:");
             log.info(dump(false));
             System.exit(-1);
@@ -733,25 +767,14 @@ public class BaseCommand {
      * 添加额外配置文件
      *      1. 优先级最高，超过命令行
      *      2. 每个额外配置文件名称固定的，由外部传入
+     *
+     * 这里的配置内容，无法在dump中显示
      */
-    public void exctraConfig(String prefix, BaseOption option, String path) {
-        /**
-         * load 配置中，任何 *config、config* 的key的名称
-         *      在此处进行load，可以将load出来的配置进行后续的check
-         *      这些配置文件之间，应该没有任何加载顺序上的要求
-         */
-        regist(prefix, option);
+    public void exctraConfig(BaseOption option, String path) {
 
-        if (Disk.fileExist(path, true)) {
-            parseFile(path, true);
+        regist("", option);
 
-        }  else if (Disk.fileExist(path, false)) {
-            parseFile(path, false);
-
-        } else {
-            log.warn("extra config [{}], but file not exist!", path);
-            System.exit(-1);
-        }
+        parseConfig(path, true);
     }
 }
 

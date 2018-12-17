@@ -61,6 +61,16 @@ public class Disk {
         return pathList;
     }
 
+    static public String actualPath(String path) {
+        if (fileExist(path, false)) {
+            return path;
+
+        } else {
+            URL url = Thread.currentThread().getContextClassLoader().getResource(path);
+            return url != null ? url.getPath() : null;
+        }
+    }
+
     /**
      * 读取默认配置文件，通常会在jar包中
      */
@@ -71,16 +81,6 @@ public class Disk {
 
         } else {
             return new File(file).exists();
-        }
-    }
-
-    static public String resourcePath(String file) {
-        URL url = Thread.currentThread().getContextClassLoader().getResource(file);
-        if (url != null) {
-            return url.getPath();
-
-        } else {
-            return null;
         }
     }
 }

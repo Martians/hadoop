@@ -19,6 +19,10 @@
             <groupId>com.data</groupId>
             <artifactId>core</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.data</groupId>
+            <artifactId>more</artifactId>
+        </dependency>
 
         <!--enable any dependency for debug purpose-->
         <!--<dependency>-->

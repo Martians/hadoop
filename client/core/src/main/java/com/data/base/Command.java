@@ -353,7 +353,15 @@ public class Command extends BaseCommand {
     public void dynamicLoad(String bind) {
         if (bind.length() > 0) {
             /**
-             * debug time
+             *  当前方法，只能导入jar包，不能导入class
+             *
+             *  方法2）只能找到单一类，而不是整个jar
+             *      URL url = new URL("file:hbase-0.0.1-SNAPSHOT.jar");
+             *      URLClassLoader loader = new URLClassLoader(new URL[]{url},
+             *      Thread.currentThread().getContextClassLoader());
+             *      factory = loader.loadClass(name).asSubclass(clazz);
+             *
+             *  这里的执行，实际是无效的，除非bind对应的目录有jar包存在
              */
             dynamicClassPath("bind/" + bind.toLowerCase() + "/target",
                     "main/target/bind/" + bind.toLowerCase());
@@ -383,7 +391,7 @@ public class Command extends BaseCommand {
     }
 
     BaseOption createOptionParser(String bind) {
-        Class<?> factory = parseClass("com.data." + bind + "Handler$Option",
+        Class<?> factory = parseClass("com.data.bind." + bind + "Handler$Option",
                 ()-> dynamicLoad(bind), BaseOption.class);
 
         try {
@@ -401,37 +409,55 @@ public class Command extends BaseCommand {
         return null;
     }
 
-    DataSource createSource() {
-        if (exist("input.source.class")) {
-
-        }
-
-        if (exist("input.source.config")) {
-            //exctraConfig(, command.get("input.source.config"));
-        }
-        return null;
-    }
-
-    DataSource createGenerator() {
+    private DataSource createSourceConfig() {
         DataSource source = null;
 
-        switch (type) {
-            case read:  source = new DataSource();
-                break;
-            case write:
-            case generate: source = new DataSource();
-                break;
+        if (exist("gen.input.source.class")) {
+            source = (DataSource) parseInstance(get("gen.input.source.class"),
+                    () -> dynamicLoad(""));
 
-            case load:
-            case fetch: source = new InputSource();
-                break;
+            if (exist("gen.input.source.config")) {
+                BaseOption option = (BaseOption) parseInstance(get("gen.input.source.class") + "$Option",
+                        () -> dynamicLoad(""));
+                exctraConfig(option, get("gen.input.source.config"));
 
-            case scan:  source = new ScanSource();
-                break;
-            default:
-                log.info("err type: {}", type);
-                System.exit(-1);
-                break;
+                /**
+                 * 重新检查参数是否有未注册的
+                 */
+                onConfigChange(getBool("gen.input.source.strict"), getBool("gen.input.source.dump"));
+            }
+        }
+        return source;
+    }
+
+    DataSource createSource() {
+        DataSource source = createSourceConfig();
+        /**
+         * 创建默认 source
+         */
+        if (source == null) {
+            switch (type) {
+                case read:
+                    source = new DataSource();
+                    break;
+                case write:
+                case generate:
+                    source = new DataSource();
+                    break;
+
+                case load:
+                case fetch:
+                    source = new InputSource();
+                    break;
+
+                case scan:
+                    source = new ScanSource();
+                    break;
+                default:
+                    log.info("err type: {}", type);
+                    System.exit(-1);
+                    break;
+            }
         }
 
         //if (source == null) {
@@ -446,7 +472,7 @@ public class Command extends BaseCommand {
         source.initialize(this, schema, dataPath());
 
         if (type == fetch) {
-            ((InputSource)source).onlyKey(true);
+            source.onlyKey(true);
         }
         return source;
     }

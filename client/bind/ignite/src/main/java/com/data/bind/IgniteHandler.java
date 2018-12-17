@@ -143,14 +143,12 @@ public class IgniteHandler extends AppHandler {
             Ignition.setClientMode(command.getBool("client"));
 
             if (command.exist("file")) {
-                String path = command.get("file");
-                if (!Disk.fileExist(path, false)) {
-                    if (Disk.fileExist(path, true)) {
-                        path = Disk.resourcePath(path);
-                    } else {
-                        log.warn("can't find config file {}", path);
-                    }
+                String path = Disk.actualPath(command.get("file"));
+                if (path == null) {
+                    log.warn("can't find config file {}", command.get("file"));
+                    System.exit(-1);
                 }
+
                 ignite = Ignition.start(path);
 
             } else {

@@ -20,6 +20,7 @@
         <module>core</module>
         <module>bind</module>
         <module>main</module>
+        <module>more</module>
     </modules>
 
     <dependencyManagement>
@@ -29,7 +30,11 @@
                 <artifactId>core</artifactId>
                 <version>${client.version}</version>
             </dependency>
-
+            <dependency>
+                <groupId>com.data</groupId>
+                <artifactId>more</artifactId>
+                <version>${client.version}</version>
+            </dependency>
             <dependency>
                 <groupId>com.data</groupId>
                 <artifactId>cassandra</artifactId>

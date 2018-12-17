@@ -26,7 +26,7 @@ public class Scheduler {
     }
 
     void createInstance() {
-        source = command.createGenerator();
+        source = command.createSource();
 
         if (command.type == Command.Type.generate
                 || command.type == Command.Type.scan && command.exist("gen.data_path"))

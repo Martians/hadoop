@@ -28,11 +28,6 @@ public class InputSource extends DataSource implements Runnable {
     MemCache cache;
     Thread  thread;
     boolean verify;
-    boolean usekey;
-
-    public void onlyKey(boolean set) {
-        usekey = set;
-    }
 
     @Override
     public void initialize(BaseCommand command, DataSchema schema, String path) {
@@ -66,7 +61,7 @@ public class InputSource extends DataSource implements Runnable {
             return null;
         }
 
-        if (usekey) {
+        if (onlyKey) {
             int index = line.indexOf(',');
             if (index >= 0) {
                 line = line.substring(0, index);

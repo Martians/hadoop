@@ -19,6 +19,7 @@ public class DataSource {
     protected BaseCommand command;
     protected DataSchema schema;
     protected String dataPath = "";
+    boolean onlyKey = false;
 
     /**
      * 用于给各个线程分配刻可执行的工作
@@ -34,8 +35,10 @@ public class DataSource {
             addOption("output.file_rand", "random write to multi file", true);
 
             addOption("input.verify", "verify data schema", true);
-            addOption("input.source.class", "new input source class", true);
-            addOption("input.source.config", "input source config", true);
+            addOption("input.source.class", "new input source class", "");
+            addOption("input.source.config", "input source config", "");
+            addOption("input.source.strict", "source config strict", false);
+            addOption("input.source.dump", "source config dump", false);
         }
     }
 
@@ -57,6 +60,10 @@ public class DataSource {
         for (DataSchema.Item item : schema.list) {
             item.gen.prepare(item);
         }
+    }
+
+    public void onlyKey(boolean set) {
+        onlyKey = set;
     }
 
     public void threadPrepare(int index) {
