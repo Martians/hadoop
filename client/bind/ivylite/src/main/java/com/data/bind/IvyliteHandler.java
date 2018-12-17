@@ -1,19 +1,19 @@
 package com.data.bind;
 
+import cn.nimblex.ivylite.Ivylition;
 import com.data.util.data.source.DataSource;
 import com.data.util.disk.Disk;
 import com.data.util.schema.DataSchema;
-import org.apache.ignite.Ignite;
-import org.apache.ignite.IgniteCache;
-import org.apache.ignite.Ignition;
-import org.apache.ignite.cache.CacheMode;
-import org.apache.ignite.client.ClientCache;
-import org.apache.ignite.client.IgniteClient;
-import org.apache.ignite.configuration.CacheConfiguration;
-import org.apache.ignite.configuration.ClientConfiguration;
-import org.apache.ignite.configuration.IgniteConfiguration;
-import org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi;
-import org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder;
+import cn.nimblex.ivylite.Ivylite;
+import cn.nimblex.ivylite.IvyliteCache;
+import cn.nimblex.ivylite.cache.CacheMode;
+import cn.nimblex.ivylite.client.ClientCache;
+import cn.nimblex.ivylite.client.IvyliteClient;
+import cn.nimblex.ivylite.configuration.CacheConfiguration;
+import cn.nimblex.ivylite.configuration.ClientConfiguration;
+import cn.nimblex.ivylite.configuration.IvyliteConfiguration;
+import cn.nimblex.ivylite.spi.discovery.tcp.TcpDiscoverySpi;
+import cn.nimblex.ivylite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,48 +21,39 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 /**
- 添加到本地maven仓库
-     mvn install:install-file -Dfile=ivylite-core-2.6.0.jar -DgroupId=cn.nimblex.ivylite -DartifactId=ivylite-core -Dversion=2.6.0 -Dpackaging=jar
-     mvn install:install-file -Dfile=ivylite-indexing-2.6.0.jar -DgroupId=cn.nimblex.ivylite -DartifactId=ivylite-indexing -Dversion=2.6.0 -Dpackaging=jar
-     mvn install:install-file -Dfile=ivylite-kafka-2.6.0.jar -DgroupId=cn.nimblex.ivylite -DartifactId=ivylite-kafka -Dversion=2.6.0 -Dpackaging=jar
-     mvn install:install-file -Dfile=ivylite-log4j-2.6.0.jar -DgroupId=cn.nimblex.ivylite -DartifactId=ivylite-log4j  -Dversion=2.6.0 -Dpackaging=jar
-     mvn install:install-file -Dfile=ivylite-spring-2.6.0.jar -DgroupId=cn.nimblex.ivylite -DartifactId=ivylite-spring -Dversion=2.6.0 -Dpackaging=jar
- */
-
-/**
  * 	clien类型
  * 	    1. useThin：访问端口与normal client不同，默认10800
  * 	         服务配置：<property name="peerClassLoadingEnabled" value="true"/>
  * 	                 不需要专门配置端口，默认已经启动了监听的端口
- * 	         服务启动：直接 bin/ignite.sh即可
+ * 	         服务启动：直接 bin/ivylite.sh即可
  *
  * 		2. normal：可以指定配置文件，或者通过程序配置
  * 			文件方式
  * 				配置：examples/config/example-cache.xml 作为模板; 并修改ip地址
- * 				启动：bin/ignite.sh examples/config/example-cache.xml
+ * 				启动：bin/ivylite.sh examples/config/example-cache.xml
  * 			    注意：配置文件复制到 main/resources下边
  *
  * 			程序方式：
  * 				配置：可以添加 <property name="peerClassLoadingEnabled" value="true"/>
- * 	     		启动：bin/ignite.sh examples/config/example-ignite.xml
+ * 	     		启动：bin/ivylite.sh examples/config/example-ivylite.xml
  *
  * 	分离融合（normal模式下，client、server是否在一起）
  *      1. 分离模式
  *      	1）client模式：client=true, 本地不启动server，数据发送到远端server
- *          2）远端服务启动：bin/ignite.sh examples/config/example-cache.xml
+ *          2）远端服务启动：bin/ivylite.sh examples/config/example-cache.xml
  *
  *      2. 融合模式：
  *      	1）server模式：client=false，本地启动server和client，数据存储在本地测试
  *          2）注意：需要关闭远端服务器，否则本地server会和远端server组成集群
  *
  *  类型系统：
- *      1. 使用 IgniteCache<String, Test> cache
- *      2. 使用 IgniteCache cache，后续 CacheConfiguration.setTypes
+ *      1. 使用 IvyliteCache<String, Test> cache
+ *      2. 使用 IvyliteCache cache，后续 CacheConfiguration.setTypes
  *
  *      测试时，使用 normal客户端，程序方式配置
- *          bin/ignite.sh examples/config/example-ignite.xml
+ *          bin/ivylite.sh examples/config/example-ivylite.xml
  */
-public class IgniteHandler extends AppHandler {
+public class IvyliteHandler extends AppHandler {
     final Logger log = LoggerFactory.getLogger(this.getClass());
 
     public static class Option extends com.data.util.command.BaseOption {
@@ -83,14 +74,14 @@ public class IgniteHandler extends AppHandler {
     /**
      * thin client
      */
-    IgniteClient thinClient;
+    IvyliteClient thinClient;
     ClientCache<String, String>  thinClientCache;
 
     /**
      * normal
      */
-    Ignite ignite;
-    IgniteCache cache;
+    Ivylite ivylite;
+    IvyliteCache cache;
 
     boolean useThin;
 
@@ -104,7 +95,7 @@ public class IgniteHandler extends AppHandler {
                 || list.get(0).type != DataSchema.Type.string
                 || list.get(1).type != DataSchema.Type.string)
         {
-            log.info("ignite test, schema must be [string, string], current: {}", command.schema);
+            log.info("ivylite test, schema must be [string, string], current: {}", command.schema);
             System.exit(-1);
         }
 
@@ -124,8 +115,8 @@ public class IgniteHandler extends AppHandler {
         loadValueClass(false);
         loadValueMethod();
 
-        //command.dynamicLoad("");
-
+        command.dynamicLoad("");
+        log.info("{}", System.getProperty("java.class.path"));
         if (useThin) {
             /**
              * thin client模式
@@ -136,11 +127,11 @@ public class IgniteHandler extends AppHandler {
             String[] servers = command.get("thin.host").split(",");
             ClientConfiguration cfg = new ClientConfiguration().setAddresses(servers);
 
-            thinClient = Ignition.startClient(cfg);
+            thinClient = Ivylition.startClient(cfg);
             thinClientCache = thinClient.getOrCreateCache(cacheName);
 
         } else {
-            Ignition.setClientMode(command.getBool("client"));
+            Ivylition.setClientMode(command.getBool("client"));
 
             if (command.exist("file")) {
                 String path = command.get("file");
@@ -151,7 +142,7 @@ public class IgniteHandler extends AppHandler {
                         log.warn("can't find config file {}", path);
                     }
                 }
-                ignite = Ignition.start(path);
+                ivylite = Ivylition.start(path);
 
             } else {
 
@@ -170,11 +161,11 @@ public class IgniteHandler extends AppHandler {
                 TcpDiscoverySpi discoverySpi = new TcpDiscoverySpi();
                 discoverySpi.setIpFinder(ipFinder);
 
-                IgniteConfiguration cfg = new IgniteConfiguration();
+                IvyliteConfiguration cfg = new IvyliteConfiguration();
                 cfg.setPeerClassLoadingEnabled(true);
                 cfg.setDiscoverySpi(discoverySpi);
 
-                ignite = Ignition.start(cfg);
+                ivylite = Ivylition.start(cfg);
             }
 
             //CacheConfiguration<String, Test> cfg = new CacheConfiguration<>();
@@ -185,7 +176,7 @@ public class IgniteHandler extends AppHandler {
             cfg.setBackups(0);
             cfg.setName(command.get("cache"));
 
-            cache = ignite.getOrCreateCache(cfg);
+            cache = ivylite.getOrCreateCache(cfg);
             log.info("connecting complete");
         }
     }
@@ -227,7 +218,7 @@ public class IgniteHandler extends AppHandler {
 
     protected void preparing() {
         if (command.getBool("clear")) {
-            ignite.destroyCache(cacheName);
+            ivylite.destroyCache(cacheName);
         }
     }
 
@@ -237,8 +228,8 @@ public class IgniteHandler extends AppHandler {
             thinClient.close();
         }
 
-        if (ignite != null) {
-            ignite.close();
+        if (ivylite != null) {
+            ivylite.close();
         }
     }
 

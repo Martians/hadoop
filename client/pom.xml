@@ -56,6 +56,12 @@
                 <artifactId>ignite</artifactId>
                 <version>${client.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>com.data</groupId>
+                <artifactId>ivylite</artifactId>
+                <version>${client.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

@@ -25,6 +25,7 @@
         <module>kafka</module>
         <module>redis</module>
         <module>ignite</module>
+        <module>ivylite</module>
         <!--<module>mapr</module>-->
     </modules>
 

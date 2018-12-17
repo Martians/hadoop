@@ -32,22 +32,22 @@
             <version>${ignite.version}</version>
         </dependency>
 
-        <!--<dependency>-->
-            <!--<groupId>org.apache.ignite</groupId>-->
-            <!--<artifactId>ignite-spring</artifactId>-->
-            <!--<version>${ignite.version}</version>-->
-            <!--&lt;!&ndash;Remove exclusion while upgrading ignite-spring version to 5.0&ndash;&gt;-->
-            <!--&lt;!&ndash;<exclusions>&ndash;&gt;-->
-                <!--&lt;!&ndash;<exclusion>&ndash;&gt;-->
-                    <!--&lt;!&ndash;<groupId>org.springframework</groupId>&ndash;&gt;-->
-                    <!--&lt;!&ndash;<artifactId>spring-core</artifactId>&ndash;&gt;-->
-                <!--&lt;!&ndash;</exclusion>&ndash;&gt;-->
-                <!--&lt;!&ndash;<exclusion>&ndash;&gt;-->
-                    <!--&lt;!&ndash;<groupId>org.springframework</groupId>&ndash;&gt;-->
-                    <!--&lt;!&ndash;<artifactId>spring-beans</artifactId>&ndash;&gt;-->
-                <!--&lt;!&ndash;</exclusion>&ndash;&gt;-->
-            <!--&lt;!&ndash;</exclusions>&ndash;&gt;-->
-        <!--</dependency>-->
+        <dependency>
+            <groupId>org.apache.ignite</groupId>
+            <artifactId>ignite-spring</artifactId>
+            <version>${ignite.version}</version>
+            <!--Remove exclusion while upgrading ignite-spring version to 5.0-->
+            <!--<exclusions>-->
+                <!--<exclusion>-->
+                    <!--<groupId>org.springframework</groupId>-->
+                    <!--<artifactId>spring-core</artifactId>-->
+                <!--</exclusion>-->
+                <!--<exclusion>-->
+                    <!--<groupId>org.springframework</groupId>-->
+                    <!--<artifactId>spring-beans</artifactId>-->
+                <!--</exclusion>-->
+            <!--</exclusions>-->
+        </dependency>
 
         <!--<dependency>-->
             <!--<groupId>org.apache.ignite</groupId>-->

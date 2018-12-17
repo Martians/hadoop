@@ -103,7 +103,7 @@ public class Command extends BaseCommand {
         //        }
         //    }
         //}
-        validBind = "cassandra, hbase, ignite, kafka, redis";
+        validBind = "cassandra, hbase, ignite, kafka, redis, ivylite";
     }
 
     protected void parseDynamic(String[] args) {
