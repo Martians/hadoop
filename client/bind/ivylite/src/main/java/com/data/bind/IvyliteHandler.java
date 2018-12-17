@@ -115,8 +115,9 @@ public class IvyliteHandler extends AppHandler {
         loadValueClass(false);
         loadValueMethod();
 
-        command.dynamicLoad("");
+        //command.dynamicLoad();
         log.info("{}", System.getProperty("java.class.path"));
+
         if (useThin) {
             /**
              * thin client模式
@@ -190,20 +191,7 @@ public class IvyliteHandler extends AppHandler {
      * Object a = Array.newInstance(factory, 1);
      */
     protected Class<?> loadValueClass(boolean retry) {
-        try {
-            factory = Class.forName(command.get("class"));
-
-        } catch (ClassNotFoundException e) {
-            if (retry) {
-                log.warn("load class {} failed, {}", command.get("class"), e);
-                System.exit(-1);
-
-            } else {
-                command.dynamicLoad("");
-                return loadValueClass(true);
-            }
-        }
-        return factory;
+        return command.parseClass(command.get("class"), () -> command.dynamicLoad(""), null);
    }
 
    protected void loadValueMethod() {

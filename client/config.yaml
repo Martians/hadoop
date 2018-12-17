@@ -1,6 +1,6 @@
 ---
 global:
-  bind: Ivylite
+  bind: Kafka
         # Kafka、Cassandra、HBase、MapR、Redis、Ignite、Ivylite
   host: 192.168.0.81,192.168.0.82,192.168.0.83
   clear: false
@@ -70,6 +70,7 @@ cassandra:
 kafka:
   host: 192.168.127.10:9092
   clear: false
+  config: 'create.yaml'
 
   table:
 #    schema: integer, string(10/1000) {3}

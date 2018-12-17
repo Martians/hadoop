@@ -8,8 +8,6 @@ import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.net.URL;
 import java.util.*;
 
 /**
@@ -55,7 +53,7 @@ public class BaseCommand {
     /**
      * 读取配置时，优先在传入的key前增加 current；找不到时再使用原key
      */
-    private String current = "";
+    protected String current = "";
 
     /**
      * when use strict mode, ignore these prefix
@@ -236,6 +234,14 @@ public class BaseCommand {
         return moveLong(key).intValue();
     }
 
+    protected String moveString(String key) {
+        String data = get(key, false);
+
+        moveKey(key);
+        moveKey(current + "." + key);
+        return data;
+    }
+
     protected void moveKey(String key) {
         if (properties.get(key) != null) {
             movingkeys.put(key, properties.get((key)));
@@ -385,6 +391,65 @@ public class BaseCommand {
             value = props.getProperty(key);
         }
         return value;
+    }
+
+    public interface SingleHandler {
+        void work();
+    }
+    public Class<?> parseClass(String name, SingleHandler handler, Class<?> parent) {
+
+        Class<?> factory = parseClass(name);
+
+        if (factory == null && handler != null) {
+            /** 启动动态加载
+             * IDE debug模式
+             *      1. 方式1：执行 mvn package，各个库生成 jar 包；
+             *              当前路径是工程根目录，从根目录下搜索jar包位置
+             *              后来maven将bind lib的生成位置移动到 main/target/bind 下
+             *
+             *      2. 方式2：将 bind 库加入到 dependency 中去，不需要动态加载；此方式也可以找到符号表；但是每次需要执行 compile
+             *
+             * 正常模式下
+             *      1. 导入lib路径，包括lib下的子目录；可以给每个礼拜建一个自己的路径
+             *
+             * Todo:
+             *      ExtClassPathLoader 增加对 class file 的 load，而不仅仅是 jar
+             **/
+            handler.work();
+            factory = parseClass(name);
+        }
+
+        if (factory == null) {
+            log.error("parse class {} failed, make sure that bind and dependency in bind/ or lib/", name);
+            System.exit(-1);
+
+        } else if (parent != null) {
+            factory = factory.asSubclass(parent);
+        }
+
+        return factory;
+    }
+
+    private Class<?> parseClass(String name) {
+        try {
+            return Class.forName(name);
+        } catch (ClassNotFoundException e) {
+            return null;
+        }
+    }
+
+
+    /**
+     *  方法2）只能找到单一类，而不是整个jar
+         URL url = new URL("file:hbase-0.0.1-SNAPSHOT.jar");
+         URLClassLoader loader = new URLClassLoader(new URL[]{url},
+         Thread.currentThread().getContextClassLoader());
+         factory = loader.loadClass(name).asSubclass(clazz);
+     */
+    protected void dynamicClassPath(String ... paths) {
+        for (String path : paths) {
+            ExtClassPathLoader.loadClasspath(path);
+        }
     }
 
     /**
@@ -662,6 +727,31 @@ public class BaseCommand {
             sortMap.putAll(unregisted);
         }
         return sortMap;
+    }
+
+    /**
+     * 添加额外配置文件
+     *      1. 优先级最高，超过命令行
+     *      2. 每个额外配置文件名称固定的，由外部传入
+     */
+    public void exctraConfig(String prefix, BaseOption option, String path) {
+        /**
+         * load 配置中，任何 *config、config* 的key的名称
+         *      在此处进行load，可以将load出来的配置进行后续的check
+         *      这些配置文件之间，应该没有任何加载顺序上的要求
+         */
+        regist(prefix, option);
+
+        if (Disk.fileExist(path, true)) {
+            parseFile(path, true);
+
+        }  else if (Disk.fileExist(path, false)) {
+            parseFile(path, false);
+
+        } else {
+            log.warn("extra config [{}], but file not exist!", path);
+            System.exit(-1);
+        }
     }
 }
 

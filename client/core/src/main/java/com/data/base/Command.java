@@ -9,20 +9,14 @@ import com.data.util.data.source.DataSource;
 import com.data.util.data.source.InputSource;
 import com.data.util.data.source.ScanSource;
 import com.data.util.monitor.MetricTracker;
-import com.data.util.sys.ExtClassPathLoader;
 import com.data.bind.AppHandler;
 import com.google.common.util.concurrent.RateLimiter;
 
-import java.io.File;
-import java.lang.reflect.Array;
-import java.lang.reflect.Type;
 import java.net.InetAddress;
-import java.nio.file.Path;
 import java.util.*;
 
 
 import static com.data.base.Command.Type.*;
-import static com.data.util.disk.Disk.traversePath;
 
 public class Command extends BaseCommand {
 
@@ -349,67 +343,26 @@ public class Command extends BaseCommand {
     }
 
     private void parseHandler(String bind) {
-        appHandlerFactory = parseClass(bind,"Handler", AppHandler.class, false);
+        appHandlerFactory = parseClass("com.data.bind." + bind + "Handler",
+                ()-> dynamicLoad(bind), AppHandler.class);
 
         BaseOption option = createOptionParser(bind);
         regist(bind, option);
     }
 
-    Class<?> parseClass(String bind, String suffix, Class<?> clazz, Boolean retry) {
-        String name = "com.data.bind." + bind + suffix;
-        Class<?> factory = null;
-
-        try {
-            factory = Class.forName(name).asSubclass(clazz);
-
-            /**
-             *  方法2）只能找到单一类，而不是整个jar
-                 URL url = new URL("file:hbase-0.0.1-SNAPSHOT.jar");
-                        URLClassLoader loader = new URLClassLoader(new URL[]{url},
-                 Thread.currentThread().getContextClassLoader());
-                 factory = loader.loadClass(name).asSubclass(clazz);
-             */
-
-        } catch (ClassNotFoundException e) {
-            if (retry) {
-                log.error("parse class {} failed, make sure that bind and dependency in bind/ or lib/", name);
-                System.exit(-1);
-
-            } else {
-                /** 启动动态加载
-                 * IDE debug模式
-                 *      1. 方式1：执行 mvn package，各个库生成 jar 包；
-                 *              当前路径是工程根目录，从根目录下搜索jar包位置
-                 *              后来maven将bind lib的生成位置移动到 main/target/bind 下
-                 *
-                 *      2. 方式2：将 bind 库加入到 dependency 中去，不需要动态加载；此方式也可以找到符号表；但是每次需要执行 compile
-                 *
-                 * 正常模式下
-                 *      1. 导入lib路径，包括lib下的子目录；可以给每个礼拜建一个自己的路径
-                 *
-                 * Todo:
-                 *      ExtClassPathLoader 增加对 class file 的 load，而不仅仅是 jar
-                 **/
-
-                dynamicLoad(bind);
-                return parseClass(bind, suffix, clazz,true);
-            }
-        }
-        return factory;
-    }
-
     public void dynamicLoad(String bind) {
-        /**
-         * debug time
-         */
-        ExtClassPathLoader.loadClasspath("bind/" + bind.toLowerCase() + "/target");
-        ExtClassPathLoader.loadClasspath("main/target/bind/" + bind.toLowerCase());
+        if (bind.length() > 0) {
+            /**
+             * debug time
+             */
+            dynamicClassPath("bind/" + bind.toLowerCase() + "/target",
+                    "main/target/bind/" + bind.toLowerCase());
+        }
 
         /**
          * runtime
          */
-        ExtClassPathLoader.loadClasspath("lib");
-        ExtClassPathLoader.loadClasspath("bind");
+        dynamicClassPath("lib", "bind");
     }
 
     AppHandler createAppHandler() {
@@ -430,7 +383,8 @@ public class Command extends BaseCommand {
     }
 
     BaseOption createOptionParser(String bind) {
-        Class<?> factory = parseClass(bind, "Handler$Option", BaseOption.class, false);
+        Class<?> factory = parseClass("com.data." + bind + "Handler$Option",
+                ()-> dynamicLoad(bind), BaseOption.class);
 
         try {
             BaseOption option = (BaseOption)factory.newInstance();
@@ -443,6 +397,17 @@ public class Command extends BaseCommand {
         } catch (IllegalAccessException e) {
             e.printStackTrace();
             log.error("create option parser error: {}", e);
+        }
+        return null;
+    }
+
+    DataSource createSource() {
+        if (exist("input.source.class")) {
+
+        }
+
+        if (exist("input.source.config")) {
+            //exctraConfig(, command.get("input.source.config"));
         }
         return null;
     }

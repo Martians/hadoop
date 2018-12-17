@@ -34,6 +34,8 @@ public class DataSource {
             addOption("output.file_rand", "random write to multi file", true);
 
             addOption("input.verify", "verify data schema", true);
+            addOption("input.source.class", "new input source class", true);
+            addOption("input.source.config", "input source config", true);
         }
     }
 
@@ -49,7 +51,6 @@ public class DataSource {
         dataPath = path;
 
         total.getAndSet(command.param.total);
-
         /**
          * 初始化相关的 Generator
          */

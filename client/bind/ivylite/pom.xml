@@ -40,14 +40,6 @@
 
         <dependency>
             <groupId>cn.nimblex.ivylite</groupId>
-            <artifactId>ivylite-spring</artifactId>
-            <version>2.6.0</version>
-            <!--<scope>system</scope>-->
-            <!--<systemPath>${basedir}/../../depend/ivylite-spring-2.6.0.jar</systemPath>-->
-        </dependency>
-
-        <dependency>
-            <groupId>cn.nimblex.ivylite</groupId>
             <artifactId>ivylite-log4j</artifactId>
             <version>2.6.0</version>
             <!--<scope>system</scope>-->
@@ -61,6 +53,7 @@
             <!--<scope>system</scope>-->
             <!--<systemPath>${basedir}/../../depend/ivylite-indexing-2.6.0.jar</systemPath>-->
         </dependency>
+
 
         <!--<dependency>-->
             <!--<groupId>cn.nimblex.ivylite</groupId>-->
@@ -84,6 +77,30 @@
             <version>${ignite.version}</version>
         </dependency>
 
+        <!--<dependency>-->
+        <!--<groupId>cn.nimblex.ivylite</groupId>-->
+        <!--<artifactId>ivylite-spring</artifactId>-->
+        <!--<version>2.6.0</version>-->
+        <!--&lt;!&ndash;<scope>system</scope>&ndash;&gt;-->
+        <!--&lt;!&ndash;<systemPath>${basedir}/../../depend/ivylite-spring-2.6.0.jar</systemPath>&ndash;&gt;-->
+        <!--</dependency>-->
+
+        <dependency>
+            <groupId>org.apache.ignite</groupId>
+            <artifactId>ignite-spring</artifactId>
+            <version>${ignite.version}</version>
+            <!--Remove exclusion while upgrading ignite-spring version to 5.0-->
+            <!--<exclusions>-->
+            <!--<exclusion>-->
+            <!--<groupId>org.springframework</groupId>-->
+            <!--<artifactId>spring-core</artifactId>-->
+            <!--</exclusion>-->
+            <!--<exclusion>-->
+            <!--<groupId>org.springframework</groupId>-->
+            <!--<artifactId>spring-beans</artifactId>-->
+            <!--</exclusion>-->
+            <!--</exclusions>-->
+        </dependency>
 
     </dependencies>
 </project>
