@@ -426,6 +426,7 @@ public class Command extends BaseCommand {
                  */
                 onConfigChange(getBool("gen.input.source.strict"), getBool("gen.input.source.dump"));
             }
+            notify("use new input source, write = load, read = fetch", "");
         }
         return source;
     }

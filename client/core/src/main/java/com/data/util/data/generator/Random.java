@@ -100,22 +100,24 @@ public class Random {
         return null;
     }
 
+    /**
+     * 进行一些固定的初始化
+     */
     final public void set(BaseCommand command) {
         this.command = command;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /**
-     *
-     * item 注册时进行检查，从item获取信息完善自身配置
-     *      进行相关初始化工作
+     * 1. 创建后立即初始化
+     *      item 注册时进行检查，从item获取信息完善自身配置
      */
     public void set(DataSchema.Item item) {
         check("integer, string", item);
     }
 
     /**
-     * 作为初始化时提供的工具函数
+     *      作为初始化时提供的工具函数
      */
     protected void check(String support, DataSchema.Item item) {
         if (support.indexOf(item.type.toString()) == -1) {
@@ -128,7 +130,8 @@ public class Random {
     }
 	
     /**
-     * 使用之前，将需要耗时的大量初始化放在这里
+     * 2. 全局初始化
+     *      使用之前，将需要耗时的大量初始化放在这里
      */
     public void prepare(DataSchema.Item item) {
         if (item.count != 0) {
@@ -158,7 +161,7 @@ public class Random {
     }
 
     /**
-     * every thread command different seed
+     * 3. 线程初始化
      */
     public void threadPrepare(int index) {
         threadIndex = index;

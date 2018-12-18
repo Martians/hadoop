@@ -50,6 +50,24 @@ import java.util.concurrent.ExecutionException;
  *
  *          可以考虑用 byte[] 替代 String，查看性能是否有提升
  *
+ * 功能：
+ *      1. 写入kafka
+ *          数据生成
+ 				内存生成：write
+ *          	文件读取：load
+ *          	新source： input.source.class
+ *
+ *      2. 读取kafka
+ *          key生成（kafka不需要此步骤）
+ *              内存生成
+ *              文件读取
+ *              新source
+ *
+ *          数据处理
+ *              内存消费：table.read_dump
+ *              内存打印：
+ *              写入文件：type: generate, consumer.extract= 1,2,3 写入到output source
+ *
  */
 public class KafkaHandler extends AppHandler {
     final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -521,6 +539,9 @@ public class KafkaHandler extends AppHandler {
                 return -1;
             }
 
+            /**
+             * 根据source返回的数组长度
+             */
             if (wrap.array.length == 1) {
                 producer.send(new ProducerRecord<>(nextTopic(),
                         list.get(0).isString() ? (String) wrap.array[0] : wrap.array[0].toString()));
@@ -553,7 +574,6 @@ public class KafkaHandler extends AppHandler {
         return 1;
     }
 
-
     public int read(int[] result, int batch) {
         try {
             while (result[0] < batch) {
@@ -566,10 +586,7 @@ public class KafkaHandler extends AppHandler {
                     result[0] += 1;
                     result[1] += record.serializedKeySize() + record.serializedValueSize();
 
-                    if (command.table.read_dump) {
-                        log.info("recv data, {}", record);
-                    }
-                    extract(record.value());
+                    extract(record.key(), record.value());
                 }
             }
         } catch (Exception e) {
@@ -590,7 +607,7 @@ public class KafkaHandler extends AppHandler {
         return 1;
     }
 
-    protected void extract(String value) {
+    protected void extract(String key, String value) {
         if (output != null) {
             String line = "";
             String[] list = value.split(",");
@@ -609,6 +626,13 @@ public class KafkaHandler extends AppHandler {
                 line = sb.toString();
             }
             output.add(line);
+
+        } else if (command.table.read_dump) {
+            if (key == null) {
+                log.info("recv [{}]", value);
+            } else {
+                log.info("recv [{}] -> [{}]", key, value);
+            }
         }
     }
 

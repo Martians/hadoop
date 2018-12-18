@@ -62,16 +62,16 @@ public class DataSource {
         }
     }
 
-    public void onlyKey(boolean set) {
-        onlyKey = set;
-    }
-
     public void threadPrepare(int index) {
         int itemIndex = 0;
         for (DataSchema.Item item : schema.list) {
             item.gen.threadPrepare(index + itemIndex);
             itemIndex++;
         }
+    }
+
+    public void onlyKey(boolean set) {
+        onlyKey = set;
     }
 
     /*

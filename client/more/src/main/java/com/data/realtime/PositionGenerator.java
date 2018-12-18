@@ -11,7 +11,7 @@ public class PositionGenerator extends Random {
 
     RealtimeSource create;
 
-    int resolution = 1000;
+    int resolution = 100000;
     int speed = 0;
 
     int stopped = 0;
@@ -32,9 +32,9 @@ public class PositionGenerator extends Random {
     public void prepare(DataSchema.Item item) {
         super.prepare(item);
 
-        resolution = command.getInt("create.gen.position.resolution");
-        speed = command.getInt("create.gen.position.speed");
-        stopped = command.getInt("create.gen.position.stop");
+        resolution = command.getInt("gen.position.resolution");
+        speed = command.getInt("gen.position.speed");
+        stopped = command.getInt("gen.position.stop");
     }
 
     public class Position {
@@ -59,7 +59,7 @@ public class PositionGenerator extends Random {
         local.set(user);
 
         if (isStopped() || create.timer.time == user.time) {
-            log.info("=========");
+            //log.info("=========");
         } else {
             int dist = (int)(speed * (create.timer.time - user.time) / 2);
 
@@ -75,10 +75,10 @@ public class PositionGenerator extends Random {
 
     long fix(long x) {
         if (x < 0) {
-            return x + resolution;
+            return Math.abs(x % resolution);
         }
         if (x > resolution) {
-            return x - resolution;
+            return Math.abs(x % resolution);
         }
         return x;
     }

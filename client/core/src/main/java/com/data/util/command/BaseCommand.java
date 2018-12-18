@@ -149,12 +149,10 @@ public class BaseCommand {
 
         if (value == null) {
             if (force) {
-                try {
-                    throw new Exception();
-                } catch (Exception e) {
-                    log.error("can't parse option {}, maybe removed or not defined!\n", key);
-                    System.exit(-1);
-                }
+                String output = String.format("\n\tcan't parse option %s, maybe removed or not defined!", key);
+
+                new Exception(output).printStackTrace();
+                System.exit(-1);
             } else {
                 return null;
             }
@@ -284,14 +282,7 @@ public class BaseCommand {
                 return false;
             }
 
-            try {
-                for (int i = 0; i < 5; i++) {
-                    System.out.print("==============");
-                    Thread.sleep(500);
-                }
-            } catch (InterruptedException e) {
-            }
-            System.out.println(" to be continued ...");
+            notify("", " to be continued ...");
             return true;
 
         } else {
@@ -312,19 +303,27 @@ public class BaseCommand {
                 return false;
             }
 
-            try {
-                for (int i = 0; i < 5; i++) {
-                    System.out.print("==============");
-                    Thread.sleep(500);
-                }
-            } catch (InterruptedException e) {
-            }
-            System.out.println(" to be continued ...");
+            notify("", " to be continued ...");
             return true;
 
         } else {
             return false;
         }
+    }
+
+    public void notify(String display, String last) {
+        if (display.length() > 0) {
+            log.info(display);
+        }
+
+        try {
+            for (int i = 0; i < 5; i++) {
+                System.out.print("==============");
+                Thread.sleep(500);
+            }
+        } catch (InterruptedException e) {
+        }
+        System.out.println(last);
     }
 
     /**
@@ -488,30 +487,15 @@ public class BaseCommand {
      * 命令解析1：从默认配置文件，读取配置，加入到 properties 中
      */
     private void parseDefault() {
-        /**
-         * 资源目录
-         */
-        yamlOrProp(true);
-
-        /**
-         * 当前目录
-         */
-        yamlOrProp(false);
-    }
-
-    /**
-     * 必须用此函数，顺序不能变，先按位置查找：.yaml 优先于 .properties
-     */
-    private void yamlOrProp(boolean resource) {
-        if (Disk.fileExist(yamlConfig, resource)) {
-            parseFile(yamlConfig, resource);
-
-        } else if (Disk.fileExist(propConfig, resource)) {
-            parseFile(propConfig, resource);
-        }
+        parseConfig(propConfig, false);
+        parseConfig(yamlConfig, false);
     }
 
     protected void parseConfig(String path, boolean force) {
+        parseConfig(path, force, "global", "");
+    }
+
+    protected void parseConfig(String path, boolean force, String cancelPrefix, String appendPrefix) {
         String actual = Disk.actualPath(path);
 
         if (actual == null) {
@@ -521,29 +505,29 @@ public class BaseCommand {
             }
 
         } else {
-            parseFile(actual, false);
+            parseFile(actual, cancelPrefix, appendPrefix);
         }
     }
 
-    private void parseFile(String file, boolean resource) {
+    private void parseFile(String file, String cancelPrefix, String appendPrefix) {
         Properties props;
-        String fixPrefix = "";
 
         if (file.endsWith("yaml") || file.endsWith("yml")) {
             ParseYAML parser = new ParseYAML();
-            props = parser.initialize(file, resource);
-            fixPrefix = "global";
+            props = parser.initialize(file);
 
         } else {
             ParseProperty parser = new ParseProperty();
-            props = parser.initialize(file, resource);
+            props = parser.initialize(file);
         }
 
         if (props == null) {
             System.exit(-1);
 
         } else {
-            fixPrefix(props, fixPrefix);
+            //props.forEach((k,v) -> log.info("{} -> {}", k, v));
+            fixPrefix(props, cancelPrefix, appendPrefix);
+            //properties.forEach((k,v) -> log.info("{} -> {}", k, v));
         }
     }
 
@@ -552,13 +536,25 @@ public class BaseCommand {
      *      1）.properties 中，对global部分的配置，没有使用前缀
      *      2）.yaml中，对global部分的配置，是放在global的对象之下，为了统一需要取消
      */
-    protected void fixPrefix(Properties props, String prefix) {
-        prefix = prefix + ".";
+    protected void fixPrefix(Properties props, String cancel, String append) {
+        cancel = cancel + ".";
+        append = append.length() > 0 ? append + "." : "";
 
         for (String key : props.stringPropertyNames()) {
             String fix = key;
-            if (key.startsWith(prefix)) {
-                fix = key.substring(prefix.length());
+
+            if (cancel.startsWith("*")) {
+                int index = key.indexOf('.');
+                if (index != -1) {
+                    fix = key.substring(index + 1);
+                }
+
+            } else if (key.startsWith(cancel)) {
+                fix = key.substring(cancel.length());
+            }
+
+            if (append.length() > 0) {
+                fix = append + fix;
             }
             properties.put(fix, props.get(key));
         }
@@ -604,7 +600,7 @@ public class BaseCommand {
          * 命令传入的configFile
          */
         if (parsed.hasOption("config")) {
-            parseFile(parsed.getOptionValue("config"), false);
+            parseConfig(parsed.getOptionValue("config"), true);
 
         /**
          * 查找是否存在可以优先级最高的配置文件, specific.yaml
@@ -766,15 +762,18 @@ public class BaseCommand {
     /**
      * 添加额外配置文件
      *      1. 优先级最高，超过命令行
-     *      2. 每个额外配置文件名称固定的，由外部传入
-     *
-     * 这里的配置内容，无法在dump中显示
+     *      2. 这里的配置内容，无法在dump中显示，需要另外定义dump选项
      */
     public void exctraConfig(BaseOption option, String path) {
 
-        regist("", option);
+        regist(current, option);
 
-        parseConfig(path, true);
+        /**
+         * 为了使优先级最高
+         *      清理提取的配置文件中，自带的前缀
+         *      将current的前缀加入到前边，相当于利用了current的机制
+         */
+        parseConfig(path, true, "*", "");
     }
 }
 

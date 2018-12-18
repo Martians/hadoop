@@ -1,5 +1,6 @@
 package com.data.realtime;
 
+import com.data.base.Command;
 import com.data.util.command.BaseCommand;
 import com.data.util.command.BaseOption;
 import com.data.util.schema.DataSchema;
@@ -22,23 +23,33 @@ public class RealtimeSource extends DataSource {
         }
     }
 
+    DataSchema schema = null;
+
     public TimeGenerator timer = new TimeGenerator();
     public UserGenerator userGen  = new UserGenerator(this);
     public PositionGenerator position;
 
     public void initialize(BaseCommand command, DataSchema schema, String path) {
-        super.initialize(command, schema, path);
+        prepareSchema(command);
 
+        super.initialize(command, this.schema, path);
         resolveParam();
         preparing();
     }
 
-    protected void resolveParam() {
-        command.advice("use create source, you'd better use [ -Xms40g] or even more memory!");
+
+    /**
+     * 重建schema
+     *      此时command内部已经初始化完成，需要使用新的
+     */
+    protected void prepareSchema(BaseCommand command) {
+        Command current = ((Command)command);
+
+        schema = current.schema;
+        schema.set(command);
 
         position = new PositionGenerator(this, command);
-
-        if (command.getBool("create.test")) {
+        if (command.getBool("test")) {
             schema.initialize("integer@null, string(18/2w)@null, integer{2}@null");
             position.prepare(schema.list.get(2));
             schema.set(0, timer);
@@ -47,7 +58,7 @@ public class RealtimeSource extends DataSource {
             schema.set(3, position);
 
         } else {
-            schema.initialize(command.get("create.schema"));
+            schema.initialize(command.get("schema"));
             position.prepare(schema.list.get(20));
             schema.set(1, timer);
             schema.set(3, userGen);
@@ -55,6 +66,10 @@ public class RealtimeSource extends DataSource {
             schema.set(21, position);
         }
         schema.dump();
+    }
+
+    protected void resolveParam() {
+        command.advice("use create source, you'd better use [ -Xms40g] or even more memory!");
     }
 
     protected void preparing() {
