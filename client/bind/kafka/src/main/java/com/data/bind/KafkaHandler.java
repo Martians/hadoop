@@ -46,7 +46,8 @@ import java.util.concurrent.ExecutionException;
  *
  *      1. Producer
  *          acks=1 时有最大性能，ack=2将降低一半
- *          增加client的线程数影响不大
+ *          线程数：对写入影响不大；可以增加generator端的cpu使用
+ *          缓存： 增加到 512M
  *
  *          可以考虑用 byte[] 替代 String，查看性能是否有提升
  *
@@ -83,9 +84,10 @@ public class KafkaHandler extends AppHandler {
             //setPrefix("kafka");
 
             addOption("producer.acks", "producer wait ack", "1");
-            addOption("producer.batch_k", "producer batch size", 16);
-            addOption("producer.linger_ms", "producer linger time", 1);
-            addOption("producer.buffer_m", "producer buffer size", 32);
+            addOption("producer.batch_k", "producer batch size", 0);
+            addOption("producer.linger_ms", "producer linger time", 0);
+            addOption("producer.buffer_m", "producer buffer size", 0);
+            addOption("producer.in_flight", "each conn in fligth", 0);
 
             addOption("consumer.group",  "consumer client group", "group_test");
             addOption("consumer.client",  "consumer client id current", "client_test");
@@ -349,6 +351,12 @@ public class KafkaHandler extends AppHandler {
         clusterInfo();
     }
 
+    void set(Properties config, String param, String option, int unit) {
+        if (command.getInt(option) > 0) {
+            config.put(param, command.getInt(option) * unit);
+        }
+    }
+
     void createProducer() {
         if (command.isWrite()) {
             Properties config = new Properties();
@@ -363,9 +371,11 @@ public class KafkaHandler extends AppHandler {
             /**
              * 如果数据没达到batch size，允许等待的时间
              */
-            config.put("linger.ms", command.getInt("producer.linger_ms"));
-            config.put("batch.size", command.getInt("producer.batch_k") * 1024);
-            config.put("buffer.memory", command.getInt("producer.buffer_m") * 1024 * 1024);
+            set(config, "linger.ms", "producer.linger_ms", 1);
+            set(config, "batch.size", "producer.batch_k", 1 * 1024);
+            set(config, "buffer.memory", "producer.buffer_m", 1 * 1024 * 1024);
+            set(config, "max.in.flight.requests.per.connection", "producer.in_flight", 1);
+
             /**
              * 现不使用压缩
              */

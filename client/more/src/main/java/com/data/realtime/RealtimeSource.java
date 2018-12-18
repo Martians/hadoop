@@ -31,6 +31,7 @@ public class RealtimeSource extends DataSource {
 
     public void initialize(BaseCommand command, DataSchema schema, String path) {
         prepareSchema(command);
+        command.advice("use create source, you'd better use [-Xms80g] or even more memory!");
 
         super.initialize(command, this.schema, path);
         resolveParam();
@@ -69,7 +70,7 @@ public class RealtimeSource extends DataSource {
     }
 
     protected void resolveParam() {
-        command.advice("use create source, you'd better use [ -Xms40g] or even more memory!");
+
     }
 
     protected void preparing() {
