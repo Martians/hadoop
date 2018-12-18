@@ -14,11 +14,13 @@ import java.util.Properties;
 public class ParseYAML {
     protected static final Logger log = LoggerFactory.getLogger(ParseYAML.class);
 
-    public Properties initialize(String file) {
+    public Properties initialize(String file, boolean resource) {
         Yaml yaml = new Yaml();
         Properties properties = new Properties();
 
-        try (InputStream is = new FileInputStream(new File(file))) {
+        try (InputStream is = resource ? BaseCommand.class.getResourceAsStream("/" + file)
+                : new FileInputStream(new File(file)))
+        {
             Iterable<Object> ret = yaml.loadAll(is);
 
             for (Object o : ret) {
@@ -52,6 +54,6 @@ public class ParseYAML {
 
     public static void main(String[] args) {
         ParseYAML parser = new ParseYAML();
-        parser.initialize("config.yaml");
+        parser.initialize("config.yaml", false);
     }
 }

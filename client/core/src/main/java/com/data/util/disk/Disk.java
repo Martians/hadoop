@@ -33,7 +33,6 @@ public class Disk {
                 return super.postVisitDirectory(dir, exc);
             }
         }
-
         try {
             Path curr = Paths.get(path);
             Files.createDirectories(curr);
@@ -66,6 +65,7 @@ public class Disk {
             return path;
 
         } else {
+
             URL url = Thread.currentThread().getContextClassLoader().getResource(path);
             return url != null ? url.getPath() : null;
         }
@@ -76,6 +76,12 @@ public class Disk {
      */
     static public Boolean fileExist(String file, boolean resource) {
         if (resource) {
+            /**
+             *  1. 虽然可以得到资源文件路径，但不能直接使用
+             *  2. 搜索是范围是所有jar包下的资源目录，以下两个文件属于不同的jar包
+             *          this.getClass().getClassLoader().getResource("example-cache.xml")
+             *          this.getClass().getClassLoader().getResource("create.yaml")
+             */
             URL url = Thread.currentThread().getContextClassLoader().getResource(file);
             return url != null;
 

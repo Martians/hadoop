@@ -184,22 +184,38 @@ public class BaseCommand {
 
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////
-    public void debug() {
-        properties.forEach((k,v) -> log.info("{} -> {}", k, v));
-    }
     public void debug(String key) {
         properties.forEach((k,v) -> {
-            if (((String)k).startsWith(key)) {
+            if (key.length() == 0 || ((String)k).startsWith(key)) {
                 log.info("=============== {} -> {}", k, v);
             }
         });
+    }
+
+    public void dump(String display, Map map) {
+        StringBuffer sb = new StringBuffer();
+        sb.append("\n");
+
+        map = getSort(map);
+        for (Object key : map.keySet()) {
+            if (key.toString().length() < 20) {
+                sb.append(String.format("\t%-20s\t: %s\n", String.format("[%s]", key), map.get(key)));
+            } else {
+                sb.append(String.format("\t%-25s\t: %s\n", String.format("[%s]", key), map.get(key)));
+            }
+        }
+        log.info("{}{}", display, sb);
     }
 
     public String dump(boolean full) {
         StringBuffer sb = new StringBuffer();
         sb.append("\n");
 
-        Map map = dump();
+        Map map = getSort(properties);
+        if (allowUnregist()) {
+            map.putAll(unregisted);
+        }
+
         for (Object key : map.keySet()) {
             if (!full && properties.getProperty(current + "." + key) != null) {
                 continue;
@@ -496,38 +512,46 @@ public class BaseCommand {
     }
 
     protected void parseConfig(String path, boolean force, String cancelPrefix, String appendPrefix) {
-        String actual = Disk.actualPath(path);
+        boolean exist = false;
+        boolean resource = false;
 
-        if (actual == null) {
+        if (Disk.fileExist(path, false)) {
+            exist = true;
+
+        } else if (Disk.fileExist(path, true)) {
+            exist = true;
+            resource = true;
+        }
+
+        if (!exist) {
             if (force) {
                 log.warn("load config [{}], but file not exist!", path);
                 System.exit(-1);
             }
 
         } else {
-            parseFile(actual, cancelPrefix, appendPrefix);
+            parseFile(path, resource, cancelPrefix, appendPrefix);
         }
     }
 
-    private void parseFile(String file, String cancelPrefix, String appendPrefix) {
+    private void parseFile(String file, boolean resource, String cancelPrefix, String appendPrefix) {
         Properties props;
 
         if (file.endsWith("yaml") || file.endsWith("yml")) {
             ParseYAML parser = new ParseYAML();
-            props = parser.initialize(file);
+            props = parser.initialize(file, resource);
 
         } else {
             ParseProperty parser = new ParseProperty();
-            props = parser.initialize(file);
+            props = parser.initialize(file, resource);
         }
 
         if (props == null) {
             System.exit(-1);
 
         } else {
-            //props.forEach((k,v) -> log.info("{} -> {}", k, v));
+            //dump("props key", props);
             fixPrefix(props, cancelPrefix, appendPrefix);
-            //properties.forEach((k,v) -> log.info("{} -> {}", k, v));
         }
     }
 
@@ -539,6 +563,7 @@ public class BaseCommand {
     protected void fixPrefix(Properties props, String cancel, String append) {
         cancel = cancel + ".";
         append = append.length() > 0 ? append + "." : "";
+        List<String> moveList = new ArrayList<>();
 
         for (String key : props.stringPropertyNames()) {
             String fix = key;
@@ -556,7 +581,23 @@ public class BaseCommand {
             if (append.length() > 0) {
                 fix = append + fix;
             }
+
+            /**
+             * 已经move的key，不能再次加入
+             */
+            if (movingkeys.get(fix) != null) {
+                moveList.add(key);
+            }
             properties.put(fix, props.get(key));
+        }
+
+        if (moveList.size() > 0) {
+            log.info("");
+            log.info("detect moved key, later config not effect:");
+            for (String key : moveList) {
+                log.info("\t\t[{}] -> {}", key, props.get(key));
+            }
+            System.exit(-1);
         }
     }
 
@@ -741,7 +782,7 @@ public class BaseCommand {
         }
     }
 
-    private Map<String, String> dump() {
+    private Map<String, String> getSort(Map map) {
         class MapKeyComparator implements Comparator<String>{
             @Override
             public int compare(String str1, String str2) {
@@ -751,11 +792,7 @@ public class BaseCommand {
 
         Map sortMap = new TreeMap<String, String>(
                 new MapKeyComparator());
-        sortMap.putAll(properties);
-
-        if (allowUnregist()) {
-            sortMap.putAll(unregisted);
-        }
+        sortMap.putAll(map);
         return sortMap;
     }
 

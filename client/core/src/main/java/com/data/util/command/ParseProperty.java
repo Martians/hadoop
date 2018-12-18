@@ -12,8 +12,10 @@ public class ParseProperty {
 
     protected static final Logger log = LoggerFactory.getLogger(ParseYAML.class);
 
-    public Properties initialize(String file) {
-        try (InputStream is = new FileInputStream(new File(file))) {
+    public Properties initialize(String file, boolean resource) {
+        try (InputStream is = resource ? BaseCommand.class.getResourceAsStream("/" + file)
+                : new FileInputStream(new File(file)))
+        {
             Properties props = new Properties();
             props.load(is);
 
