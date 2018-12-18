@@ -100,17 +100,23 @@ public class Random {
         return null;
     }
 
-    public void set(BaseCommand command) {
+    final public void set(BaseCommand command) {
         this.command = command;
     }
 
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /**
      *
      * item 注册时进行检查，从item获取信息完善自身配置
+     *      进行相关初始化工作
      */
     public void set(DataSchema.Item item) {
         check("integer, string", item);
     }
+
+    /**
+     * 作为初始化时提供的工具函数
+     */
     protected void check(String support, DataSchema.Item item) {
         if (support.indexOf(item.type.toString()) == -1) {
             log.info("generator [{}] not support schema type [{}], item: {}", this, item.type, item);
@@ -118,29 +124,9 @@ public class Random {
         }
     }
 
-    public void reset() {
+	public void reset() {
     }
-
-    /**
-     * every thread command different seed
-     */
-    public void threadPrepare(int index) {
-        threadIndex = index;
-        updateSeed(index);
-    }
-
-    public void updateSeed(int index) {
-        long seed = command.getLong("gen.seed");
-
-        /**
-         * recordSeed 确保只设置一次
-         */
-        if (seed != 0) {
-            recordSeed = seed + index;
-            getRandom().setSeed(recordSeed);
-        }
-    }
-
+	
     /**
      * 使用之前，将需要耗时的大量初始化放在这里
      */
@@ -170,6 +156,27 @@ public class Random {
             }
         }
     }
+
+    /**
+     * every thread command different seed
+     */
+    public void threadPrepare(int index) {
+        threadIndex = index;
+        updateSeed(index);
+    }
+
+    public void updateSeed(int index) {
+        long seed = command.getLong("gen.seed");
+
+        /**
+         * recordSeed 确保只设置一次
+         */
+        if (seed != 0) {
+            recordSeed = seed + index;
+            getRandom().setSeed(recordSeed);
+        }
+    }
+
     /**
      * 每次访问已经cache的object，可以进行一些更新
      */

@@ -85,19 +85,17 @@ kafka:
     replica: 1
 
   gen:
-    input:
-      verify: false
     output:
       file_rand: false
       file_size: 1g
 
     input:
-      verify: true
-      source:
-        class: com.data.realtime.RealtimeSource
-        config: create.yaml
-        strict: false
-        dump: false
+      verify: false
+#      source:
+#        class: com.data.realtime.RealtimeSource
+#        config: create.yaml
+#        strict: false
+#        dump: false
 
   work:
     type: generate

@@ -6,8 +6,6 @@ import com.data.util.schema.DataSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.ThreadLocalRandom;
-
 public class PositionGenerator extends Random {
     final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -51,31 +49,24 @@ public class PositionGenerator extends Random {
         return pos;
     }
 
-    UserGenerator.User getLast() {
-        UserGenerator.User last = local.get();
-        if (last == null) {
-            //last = new UserGenerator.User();
-        }
-        return last;
-    }
-
     public String getString(int length) {
         UserGenerator.User last = local.get();
+        UserGenerator.User user = create.userGen.user();
 
-        if (last != null && last.name.equals(create.userGen.user.name)) {
-            return makeString(last.pos.y);
+        if (last == user) {
+            return makeString(user.pos.y);
         }
-        last = create.userGen.user;
+        local.set(user);
 
-        if (isStopped() || create.timer.time == last.time) {
-            //log.info("=========");
+        if (isStopped() || create.timer.time == user.time) {
+            log.info("=========");
         } else {
-            int dist = (int)(speed * (create.timer.time - last.time) / 2);
+            int dist = (int)(speed * (create.timer.time - user.time) / 2);
 
-            last.pos.x = fix(last.pos.x + (long)getIndex(-dist, dist));
-            last.pos.y = fix(last.pos.y + (long)getIndex(-dist, dist));
+            user.pos.x = fix(user.pos.x + (long)getIndex(-dist, dist));
+            user.pos.y = fix(user.pos.y + (long)getIndex(-dist, dist));
         }
-        return makeString(last.pos.x);
+        return makeString(user.pos.x);
     }
 
     boolean isStopped() {

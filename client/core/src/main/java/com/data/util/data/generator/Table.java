@@ -14,8 +14,8 @@ import java.util.concurrent.atomic.AtomicLong;
 public class Table extends Random {
     static final Logger log = LoggerFactory.getLogger(Table.class);
 
-    public void set(BaseCommand command) {
-        super.set(command);
+    public void set(DataSchema.Item item) {
+        check("string", item);
 
         table_array = new TableArray();
         table_array.initialize();
@@ -51,10 +51,6 @@ public class Table extends Random {
      * 超过此值，才会使用table方式
      */
     public int waterLevel = 32;
-
-    public void set(DataSchema.Item item) {
-        check("string", item);
-    }
 
     private char[] threadArray() {
         char[] array = local.get();
