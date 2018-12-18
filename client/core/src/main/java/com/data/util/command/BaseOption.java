@@ -175,8 +175,16 @@ public class BaseOption {
             return option.replace(".", "_");
 
         } else {
-            int index = option.lastIndexOf(".");
-            return option.substring(index + 1);
+            /**
+             * 这样容易产生冲突，比如 config、kafka.config、kafka.gen.input.source.config
+             * 因此处理时，只是强调第一层的配置前缀，尽量将其与命令行联系起来
+             */
+            int index = option.indexOf(".");
+            if (index == -1) {
+                return option;
+            } else {
+                return option.substring(index + 1);
+            }
         }
     }
 

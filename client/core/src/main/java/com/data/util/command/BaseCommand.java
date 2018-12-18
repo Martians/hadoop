@@ -150,9 +150,7 @@ public class BaseCommand {
         if (value == null) {
             if (force) {
                 String output = String.format("\n\tcan't parse option %s, maybe removed or not defined!", key);
-
-                new Exception(output).printStackTrace();
-                System.exit(-1);
+                exit(output);
             } else {
                 return null;
             }
@@ -192,6 +190,9 @@ public class BaseCommand {
         });
     }
 
+    public void dump(Map map) {
+        dump("", map);
+    }
     public void dump(String display, Map map) {
         StringBuffer sb = new StringBuffer();
         sb.append("\n");
@@ -227,6 +228,11 @@ public class BaseCommand {
             }
         }
         return sb.toString();
+    }
+
+    public void exit(String output) {
+        new Exception(output).printStackTrace();
+        System.exit(-1);
     }
 
     public String toString() {
@@ -597,7 +603,7 @@ public class BaseCommand {
             for (String key : moveList) {
                 log.info("\t\t[{}] -> {}", key, props.get(key));
             }
-            System.exit(-1);
+            exit("");
         }
     }
 
