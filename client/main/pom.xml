@@ -48,10 +48,10 @@
             <!--<artifactId>ignite</artifactId>-->
         <!--</dependency>-->
 
-        <dependency>
-            <groupId>com.data</groupId>
-            <artifactId>ivylite</artifactId>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>com.data</groupId>-->
+            <!--<artifactId>ivylite</artifactId>-->
+        <!--</dependency>-->
         <!--<dependency>-->
         <!--<groupId>com.data</groupId>-->
         <!--<artifactId>mapr</artifactId>-->

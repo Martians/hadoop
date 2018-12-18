@@ -1,0 +1,90 @@
+---
+global:
+  bind: Kafka
+        # Kafka、Cassandra、HBase、MapR
+  host: 192.168.0.81,192.168.0.82,192.168.0.83
+  clear: false
+  prefix: false
+
+  work:
+    type: write
+        # write、read; generate、load; scan
+        #   write; read; scan; generate
+        #   write read; generate load
+        #   write scan load
+    total: 1000
+    batch: 100
+    thread: 1
+    throttle: 0
+    read_thread: 100
+
+  gen:
+    seed: 100
+        # rand、uuid、seq、table、fix
+    string:
+      gen: random
+    integer:
+      min: 0
+      max: 0
+    data_path: test
+    output:
+      file_count: 10
+      file_size: -1
+    input:
+      verify: true
+
+  table:
+    schema: String(4), String(100){2}
+        # integer @numeric、@sequence
+        # string  @random、@fixed、@table、@uuid
+
+        # primary key ((key, column0), column1), index(column4, column5, column6)
+        # schema: integer, String(4)[10]<(0, 1), 2>{5-7}
+    keyspace: test_space
+    table: test
+    replica: 1
+    read_empty: 1000
+
+#dump: true
+kafka:
+  host: 192.168.108.124:21005 
+  clear: false
+
+  table:
+#    schema: integer, string(10/1000) {3}
+    schema: string(10), string(30), string(20)
+    replica: 1
+
+  gen:
+    data_path: /mnt/sdb/extract/
+    input:
+      verify: false
+    output:
+      file_rand: false
+      file_size: 1g
+
+  work:
+    type: read
+    total: 100000000000
+    thread: 20
+      # write、read; generate、load; scan
+    read_thread: 10
+
+  topic:
+    name: newlocation_1
+    count: 1
+    replica: 2
+    partition: 200
+    loop: 10000
+
+  producer:
+    batch_k: 256
+    buffer_m: 64
+    linger_ms: 10
+    acks: 1
+
+  consumer:
+    group: group_test2
+    client: client-test
+    extract: 3
+

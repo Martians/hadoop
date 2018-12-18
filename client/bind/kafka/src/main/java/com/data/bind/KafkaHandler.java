@@ -24,9 +24,9 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 /**
- * API：http://kafka.apache.org/20/javadoc/index.html?overview-summary.html
- *
- * ## BaseCommand
+## 使用
+    API：http://kafka.apache.org/20/javadoc/index.html?overview-summary.html
+
     1. Topic
       bin/kafka-topics.sh $ZK_HOST --list
       bin/kafka-topics.sh $ZK_HOST --describe
@@ -37,38 +37,49 @@ import java.util.concurrent.ExecutionException;
     3. group
        bin/kafka-consumer-groups.sh $BT_HOST --list
        bin/kafka-consumer-groups.sh $BT_HOST --describe --group group_test
- *
- *
- * 性能：
- *      ## 自带性能测试：
- *      https://github.com/apache/kafka/blob/trunk/tools/src/main/java/org/apache/kafka/tools/ProducerPerformance.java
- *      https://github.com/apache/kafka/blob/trunk/core/src/main/scala/kafka/tools/ConsumerPerformance.scala
- *
- *      1. Producer
- *          acks=1 时有最大性能，ack=2将降低一半
- *          线程数：对写入影响不大；可以增加generator端的cpu使用
- *          缓存： 增加到 512M
- *
- *          可以考虑用 byte[] 替代 String，查看性能是否有提升
- *
- * 功能：
- *      1. 写入kafka
- *          数据生成
- 				内存生成：write
- *          	文件读取：load
- *          	新source： input.source.class
- *
- *      2. 读取kafka
- *          key生成（kafka不需要此步骤）
- *              内存生成
- *              文件读取
- *              新source
- *
- *          数据处理
- *              内存消费：table.read_dump
- *              内存打印：
- *              写入文件：type: generate, consumer.extract= 1,2,3 写入到output source
- *
+
+## 功能：
+     1. 写入kafka，数据生成
+         内存生成：write
+         文件读取：load
+         新source： input.source.class
+
+    2. 读取kafka，访问key生成（实际上kafka不需要此步骤）
+         内存生成
+         文件读取
+         新source
+
+    3. 数据处理
+         内存消费：table.read_dump
+         内存打印：
+         写入文件：type: generate, consumer.extract= 1,2,3 写入到output source
+
+## 性能
+     ## 自带测试：
+         https://github.com/apache/kafka/blob/trunk/tools/src/main/java/org/apache/kafka/tools/ProducerPerformance.java
+         https://github.com/apache/kafka/blob/trunk/core/src/main/scala/kafka/tools/ConsumerPerformance.scala
+
+    1. Producer
+            acks=1 时有最大性能，ack=2将降低一半
+            线程数：对写入影响不大；但可以增加generator的cpu使用
+            写缓存： 增加到 512M
+
+
+            可以考虑用 byte[] 替代 String，查看性能是否有提升
+            broker端增加网络线程个数
+
+## 结果
+    1. 单client最大性能 90W/500M 左右，与每个broker单连接
+            producer:
+                batch_k: 256
+                buffer_m: 512
+                linger_ms: 10
+                acks: 1
+                in_flight: 20
+
+                客户端配置中没找到增加连接数的地方
+
+    2. 多client可以线性提升，相当于多连接
  */
 public class KafkaHandler extends AppHandler {
     final Logger log = LoggerFactory.getLogger(this.getClass());
