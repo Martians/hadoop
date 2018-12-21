@@ -16,26 +16,73 @@ public class UserGenerator extends Random {
     UserGenerator(RealtimeSource create) {
         this.create = create;
     }
+    ThreadLocal<Index> index = new ThreadLocal<>();
+
+    boolean liner;
+
+    class Index {
+        int star;
+        int data;
+
+        void init(int max) {
+            star = Math.abs(getRandom().nextInt() % max);
+            data = 0;
+        }
+
+        int next(int max) {
+            if (data == max) {
+                init(max);
+            } else {
+                data++;
+            }
+            int next = star + data;
+            return next >= max ? next - max : next;
+        }
+    }
 
     class User {
         String name;
         long   time;
+        //AtomicInteger count = new AtomicInteger(0);
         PositionGenerator.Position pos;
+
         public String toString() { return name; }
     }
 
     public void set(DataSchema.Item item) {
         item.len = 18;
         item.type = DataSchema.Type.object;
+        liner = command.getBool("liner");
     }
 
+    /**
+     * 确保user的生成随机数是固定的
+     */
     protected void prepareEnviroment(DataSchema.Item item) {
         recordSeed = 100 + 3 * 101;
         getRandom().setSeed(recordSeed);
     }
 
     protected void cacheUpdate(Object object) {
-        local.set((User)object);
+        User user = (User)object;
+        local.set(user);
+    }
+
+    /**
+     * 为了使每个user被选中的概率大致相同
+     */
+    public int getIndex(int max) {
+        if (liner) {
+            Index curr = index.get();
+            if (curr == null) {
+                curr = new Index();
+                curr.init(max);
+                index.set(curr);
+            }
+            return curr.next(max) % max;
+        } else {
+            return super.getIndex(max);
+        }
     }
 
     public User user() {
@@ -55,4 +102,11 @@ public class UserGenerator extends Random {
         user.pos = create.position.newOne();
         return user;
     }
+
+    //public void display() {
+    //    for (Object object : objectList) {
+    //        User user = (User)object;
+    //        log.info("[user: {}]", user.name, user.count.get());
+    //    }
+    //}
 }

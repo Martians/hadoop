@@ -1,7 +1,8 @@
 ---
 create:
   test: false
-  schema: integer, integer@null, integer, string(18/100w)@null, string(36), string(32), string(36), string(5){3}, string(16){3}, string(12), string(16){2}, string(12), string(10), string(4), string(20), integer{2}@null, string(1), string(10), string(64){3}, string(32)
+  schema: integer, integer@null, integer, string(18/1w)@null, string(36), string(32), string(36), string(5){3}, string(16){3}, string(12), string(16){2}, string(12), string(10), string(4), string(20), integer{2}@null, string(1), string(10), string(64){3}, string(32)
+  liner: true
 
   gen:
     data_path: test

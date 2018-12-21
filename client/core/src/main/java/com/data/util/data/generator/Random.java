@@ -35,7 +35,7 @@ public class Random {
     /**
      * 缓存object作为数据集合，后续不需要再重新生成
      */
-    List<Object> objectList;
+    protected List<Object> objectList;
 
     public static void regist(BaseCommand command) {
         command.regist("gen", new Option());
