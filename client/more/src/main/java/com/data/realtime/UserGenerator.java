@@ -29,6 +29,11 @@ public class UserGenerator extends Random {
         item.type = DataSchema.Type.object;
     }
 
+    protected void prepareEnviroment(DataSchema.Item item) {
+        recordSeed = 100 + 3 * 101;
+        getRandom().setSeed(recordSeed);
+    }
+
     protected void cacheUpdate(Object object) {
         local.set((User)object);
     }

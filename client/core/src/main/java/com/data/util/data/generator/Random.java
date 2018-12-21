@@ -30,7 +30,7 @@ public class Random {
     /**
      * 多个schema共用generator时，防止多次设置seed
      */
-    long recordSeed = 0;
+    protected long recordSeed = 0;
 
     /**
      * 缓存object作为数据集合，后续不需要再重新生成
@@ -44,6 +44,7 @@ public class Random {
     public static class Option extends BaseOption {
         protected void initialize() {
             addOption("seed",  "random seed",0);
+            addOption("prepare_dump",  "dump some prepare item",0);
 
             addOption("integer.gen",  "integer generator","numeric");
             addOption("integer.min",  "integer default min value", 0);
@@ -138,12 +139,8 @@ public class Random {
             if (objectList == null) {
 
                 List<Object> list = new ArrayList<>();
-                updateSeed(item.index * 101);
-                /**
-                 * 后续仍然会在 threadPrepare 根据 thread index 设置 seed
-                 */
-                //recordSeed = 0;
 
+                prepareEnviroment(item);
                 log.info("start prepare data set, for schema: {}", item);
                 for (int i = 0; i < item.count; i++) {
                     list.add(get(item));
@@ -154,10 +151,26 @@ public class Random {
                 }
                 objectList = list;
 
+                if (command.getInt("gen.prepare_dump") > 0) {
+                    int count = command.getInt("gen.prepare_dump");
+                    for (int i = 0; i < list.size() && i < count; i++) {
+                        log.info("{}", list.get(i));
+                    }
+                    System.exit(-1);
+                }
+
             } else {
                 log.debug("already set, maybe dump item");
             }
         }
+    }
+
+    protected void prepareEnviroment(DataSchema.Item item) {
+        updateSeed(item.index * 101);
+        /**
+         * 后续仍然会在 threadPrepare 根据 thread index 设置 seed
+         */
+        //recordSeed = 0;
     }
 
     /**

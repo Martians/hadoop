@@ -426,13 +426,14 @@ public class Command extends BaseCommand {
                  */
                 onConfigChange(getBool("gen.input.source.strict"), getBool("gen.input.source.dump"));
             }
-            notify("use new input source, write = load, read = fetch", "");
+            advice("use new input source, write = load, read = fetch");
         }
         return source;
     }
 
     DataSource createSource() {
-        DataSource source = createSourceConfig();
+        source = createSourceConfig();
+
         /**
          * 创建默认 source
          */
