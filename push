@@ -1,13 +1,42 @@
 #!/bin/sh
 
+# # 发生了修改、加入到cache
+# # 		if [ "`git st -s`" ];
+# git_modify() {
+# 	result=`git st -s`
+# 	if [[ "$result" != "" ]]; then
+# 		echo "git modify"
+# 		return 0
+# 	else
+# 		return 1
+# 	fi
+# }
+
+# # 加入到cache
+# git_cache() {
+# 	git diff --cached --quiet
+# 	return $?
+# }
+
+# # 所有情况：发生了修改、加入到cache、尚未push
+# #		git diff origin/master --quiet
+# git_commit() {
+# 	git diff origin/master --quiet
+# 	return $?
+# }
+
 # not in code dir; $1 used for prevent from endless loop 
 if [ -e ../code/push ] && ! [[ `pwd` =~ .*code$ ]] && [[ $1 != 1 ]]; then
 	sh ../code/push 1
 else
-	git add -A .
-
 	# 1) some data in cache 2) change commit, but have not pushed
-	if !(git diff --cached --quiet && git diff origin/master --quiet); then
-		git ci -m "fix" && git push origin master:master
+	if !(git diff origin/master --quiet); then
+		# only commit when needed
+		if [ "`git st -s`" ]; then
+			git add -A .
+			git ci -m "fix"
+		fi
+		git push origin master:master
+		# result=`git push origin master:master 2>&1 | tee -`
 	fi
 fi
