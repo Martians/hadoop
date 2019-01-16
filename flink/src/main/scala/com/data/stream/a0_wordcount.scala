@@ -1,14 +1,7 @@
-package com.data
+package com.data.stream
 
 import test.Enviroment
 
-object DataSet {
-    val WORDS = Array(
-        "To be, or not to be,--that is the question:--",
-        "Whether 'tis nobler in the mind to suffer",
-        "The slings and arrows of outrageous fortune"
-    )
-}
 
 object a0_wordcount {
     def main(args: Array[String]): Unit = {
@@ -19,7 +12,7 @@ object a0_wordcount {
             .flatMap(_.split("\\W+"))
             .filter(_.nonEmpty)
             .map((_, 1))
-            .keyBy(0)
+//            .keyBy(0)
             .sum(1)
 
         work.print(stream)

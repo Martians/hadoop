@@ -1,4 +1,4 @@
-package com.data
+package com.data.stream
 
 import org.apache.flink.streaming.api.TimeCharacteristic
 import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
