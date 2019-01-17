@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<Configuration status="INFO">
+<Configuration status="INFO" packages="io.prometheus.client.log4j2">
 
 	<properties>
         <property name="LOGS_PATH">.</property>
@@ -22,12 +22,15 @@
         <!--<File name="data_log" fileName="${LOGS_PATH}/extra/data.log">-->
             <!--<PatternLayout pattern="%msg%n" />-->
         <!--</File>-->
+
+        <Prometheus name="METRICS"/>
     </Appenders>
 
     <Loggers>
         <Root level="info">
             <AppenderRef ref="Console" />
             <AppenderRef ref="server_log" />
+            <AppenderRef ref="METRICS" />
         </Root>
 
         <!--<Logger name="warning" level="info" additivity="false">-->
@@ -38,5 +41,4 @@
             <!--<AppenderRef ref="data_log" />-->
         <!--</Logger>-->
     </Loggers>
-
 </Configuration>  
