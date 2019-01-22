@@ -56,7 +56,7 @@ public class Counter {
             working();
 
             while (true) {
-                sleep(1000);
+                sleep(500);
                 running();
             }
         } catch (IOException e) {
@@ -68,7 +68,7 @@ public class Counter {
     }
 
     /**
-     * test_counter_speed1
+     * test_counter_speed
      *
      *  查看各个server的速度：
      *      1）rate(test_counter_speed[10s])
@@ -79,8 +79,8 @@ public class Counter {
      */
     void running() {
         counter.inc();
-        counter_speed.labels("server-1").inc(rand(10));
-        counter_speed.labels("server-2").inc(rand(10));
+        counter_speed.labels("server-1").inc(rand(100));
+        counter_speed.labels("server-2").inc(rand(100));
     }
 
     public static void main(String[] args) {

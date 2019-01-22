@@ -13,9 +13,13 @@ public class Histograms extends Counter {
             .buckets(.01, .2, .7, .8).help("Request latency in seconds.").register();
 
     static final Histogram receivedBytes = Histogram.build()
-            .name("histogram_size_bytes").help("Request size in bytes.").register();
+            .name("histogram_size_bytes")
+            .buckets(1, 2, 8, 30, 90, 100)
+            .help("Request size in bytes.").register();
+
     static final Histogram requestLatency = Histogram.build()
-            .name("histogram_latency_seconds").help("Request latency in seconds.").register();
+            .name("histogram_latency_seconds")
+            .help("Request latency in seconds.").register();
 
     void working() {
         Histogram.Timer requestTimer = histogram.startTimer();
@@ -61,9 +65,9 @@ public class Histograms extends Counter {
          */
         Histogram.Timer requestTimer = requestLatency.startTimer();
         try {
-            sleep(rand(1000));
+            sleep(rand(500));
         } finally {
-            receivedBytes.observe(rand(10));
+            receivedBytes.observe(rand(100));
             requestTimer.observeDuration();
         }
     }
