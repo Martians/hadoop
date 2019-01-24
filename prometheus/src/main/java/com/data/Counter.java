@@ -63,7 +63,7 @@ public class Counter {
 
     void startServer() {
         try {
-            HTTPServer server = new HTTPServer(9090);
+            HTTPServer server = new HTTPServer(9700);
             working();
 
             while (true) {
