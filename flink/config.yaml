@@ -1,0 +1,19 @@
+---
+flink:
+  config:
+    parallelism: 1
+
+  debug:
+    loop: 1000
+    dump: true
+
+  kafka:
+    topic: test
+    group: test
+    server: 192.168.0.81:9092
+    Earliest: true
+
+  database:
+    topic: rule
+    group: test
+    server: 192.168.0.81:9092

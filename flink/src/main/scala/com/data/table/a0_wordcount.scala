@@ -15,15 +15,15 @@ object a0_wordcount {
 
         val work = new Enviroment(args)
 
-        val stream = DataSet.WORDS
-            .flatMap(_.split("\\W+"))
-            .filter(_.nonEmpty)
-            .map((_, 1))
-//            .keyBy(0)
-            .sum(1)
+//        val stream = DataSet.WORDS
+//            .flatMap(_.split("\\W+"))
+//            .filter(_.nonEmpty)
+//            .map((_, 1))
+////            .keyBy(0)
+//            .sum(1)
+//
+//        work.print(stream)
 
-        work.print(stream)
-
-        work.env.execute("Streaming WordCount")
+//        work.env.execute("Streaming WordCount")
     }
 }
