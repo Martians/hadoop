@@ -2,10 +2,15 @@
 flink:
   config:
     parallelism: 1
+    # 连接到数据库获取规则之前，每个taskManager上可以保留的Event的个数
+    unordered: 100000
 
   debug:
-    loop: 1000
-    dump: true
+    test: true
+    count: 10000
+    wait: 2000
+    # 是否输出报警的match信息
+    logging: true
 
   kafka:
     topic: test

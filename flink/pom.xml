@@ -22,7 +22,7 @@ under the License.
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.data</groupId>
-    <artifactId>flink</artifactId>
+    <artifactId>monitoring</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
@@ -170,7 +170,7 @@ under the License.
                             <transformers>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.data.StreamJob</mainClass>
+                                    <mainClass>com.data.stream.Monitoring</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
@@ -261,6 +261,25 @@ under the License.
                             <sources>
                                 <source>src/test/scala</source>
                             </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <tasks>
+                                <!--https://www.cnblogs.com/flowerbirds/p/6268663.html-->
+                                <copy overwrite="true" file="${project.basedir}/config.yaml"
+                                      todir="${project.build.directory}"/>
+                            </tasks>
                         </configuration>
                     </execution>
                 </executions>
