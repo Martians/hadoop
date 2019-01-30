@@ -3,9 +3,10 @@ package com.data.util.command;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.util.Properties;
 
-public class BaseExporter {
+public class BaseExporter implements Serializable {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
     Properties properties = new Properties();

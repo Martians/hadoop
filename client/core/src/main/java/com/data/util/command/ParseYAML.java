@@ -45,7 +45,7 @@ public class ParseYAML extends BaseExporter {
         } else if (object instanceof List) {
             log.info("ignore array: {}", object);
 
-        } else {
+        } else if (object != null) {
             properties.put(prefix, object.toString());
             log.trace("get: {} -> {}", prefix, object);
         }
