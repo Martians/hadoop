@@ -1,0 +1,91 @@
+#!/bin/bash
+
+DEST=/opt/cassandra  
+cd $DEST
+
+BASE_PATH=$(cd "$(dirname $0)"; cd ..; pwd)
+. $BASE_PATH/common/handle.sh
+
+#################################################################################################################
+start() {
+	echo "start ..."
+	bin/cassandra -R
+}
+
+stop() {
+	echo "stop ..."
+	pgrep -f apache.cassandra | xargs kill -9
+}
+
+restart() {
+	stop
+	start
+}
+
+clear() {
+	stop
+	
+	echo "reset data ..."
+	exec_wrapper_param DISK "" "/*" rm -rf
+
+	sleep 3
+	data
+}
+
+data() {
+	echo "data size ..."
+	disk_array=$(echo_wrapper DISK "-e \t" " ")
+	du -csh $disk_array
+}
+
+status() {
+	bin/nodetool status
+}
+
+###########################################################################################
+conf() {
+	cd $DEST/conf
+	vim $DEST/conf/cassandra.yaml
+}
+
+log() {
+	cd $DEST/logs
+	tail -f $DEST/logs/debug.log
+}
+
+bin() {
+	echo "$DEST/bin"
+	cd $DEST/bin
+}
+
+info() {
+	echo "change log to info"
+	sed -i "s/\(root level=\).*>/\1\"INFO\">/" $DEST/conf/logback.xml
+}
+
+debug() {
+	echo "change log to debug"
+	sed -i "s/\(root level=\).*>/\1\"DEBUG\">/" $DEST/conf/logback.xml
+}
+
+trace() {
+	echo "change log to trace"
+	sed -i "s/\(root level=\).*>/\1\"DEBUG\">/" $DEST/conf/logback.xml
+}
+
+if [ "$(type -t $1)" = "function" ] ; then
+    $1
+else
+	echo "no such option: [$1]"
+	echo -e "help: \n $(show_help $0)"
+fi
+# case "$1" in
+# 	start)	start;;
+# 	stop)	stop;;
+# 	restart) restart;;
+# 	data) 	data;;
+# 	clear) 	clear;;
+# 	status)	status;;
+# 	log) 	log;;
+# 	*) 	echo "Unknown option: $1";;
+# esac

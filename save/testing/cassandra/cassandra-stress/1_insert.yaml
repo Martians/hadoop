@@ -1,0 +1,122 @@
+#############################################################################################################
+keyspace: stresscql
+
+#
+# The CQL for creating a keyspace (optional if it already exists)
+#
+keyspace_definition: |
+  CREATE KEYSPACE stresscql WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 3};
+
+#
+# Table info
+#
+table: typestest
+
+#
+# The CQL for creating a table you wish to stress (optional if it already exists)
+#
+table_definition: |
+  CREATE TABLE typestest (
+        c0 text,
+        c1 text,
+        c2 text,
+        c3 text,
+        c4 text,
+        c5 text,
+        c6 text,
+        c7 text,
+        c8 text,
+        c9 text,
+        PRIMARY KEY(c0, c1)
+  ) 
+    WITH compaction = { 'class':'LeveledCompactionStrategy' }
+#    AND compression = { 'sstable_compression' : '' }
+#    AND comment='A table of many types to test wide rows'
+
+#
+# Optional meta information on the generated columns in the above table
+# The min and max only apply to text and blob types
+# The distribution field represents the total unique population
+# distribution of that column across rows.  Supported types are
+# 
+#      EXP(min..max)                        An exponential distribution over the range [min..max]
+#      EXTREME(min..max,shape)              An extreme value (Weibull) distribution over the range [min..max]
+#      GAUSSIAN(min..max,stdvrng)           A gaussian/normal distribution, where mean=(min+max)/2, and stdev is (mean-min)/stdvrng
+#      GAUSSIAN(min..max,mean,stdev)        A gaussian/normal distribution, with explicitly defined mean and stdev
+#      UNIFORM(min..max)                    A uniform distribution over the range [min, max]
+#      FIXED(val)                           A fixed distribution, always returning the same value
+#      SEQ(min..max)                        A fixed sequence, returning values in the range min to max sequentially (starting based on seed), wrapping if necessary.
+#      Aliases: extr, gauss, normal, norm, weibull
+#
+#      If preceded by ~, the distribution is inverted
+#
+# Defaults for all columns are size: uniform(4..8), population: uniform(1..100B), cluster: fixed(1)
+#
+columnspec:
+  - name: c0
+    size: FIXED(4)
+    population: uniform(1..1000B)     # the range of unique values to select for the field (default is 100Billion)
+  - name: c1
+    size: FIXED(4)
+    cluster: uniform(1..1000)
+  - name: c2
+    size: FIXED(4)
+    cluster: uniform(1..1000)
+  - name: c3  
+    size: FIXED(4)
+    cluster: uniform(1..1000)
+  - name: c4
+    size: FIXED(4)
+    cluster: uniform(1..1000)
+  - name: c5
+    size: FIXED(4)
+    cluster: uniform(1..1000)
+  - name: c6
+    size: FIXED(4)
+    cluster: uniform(1..1000)
+  - name: c7
+    size: FIXED(4)
+    cluster: uniform(1..1000)
+  - name: c8
+    size: FIXED(4)
+    cluster: uniform(1..1000)
+  - name: c9
+    size: FIXED(4)
+    cluster: uniform(1..1000)
+#############################################################################################################
+# batchtype: LOGGED/UNLOGGED
+# select:  / <batch total item>, 分母是本次batch操作的总个数
+# 每次batch
+#   生成[1..50]个partitions的数据；每个partitions拥有2行数据‘
+
+insert:
+  partitions: uniform(1..10)       # number of unique partitions to update in a single operation
+                                  # if batchcount > 1, multiple batches will be used but all partitions will
+                                  # occur in all batches (unless they finish early); only the row counts will vary
+  batchtype: LOGGED               # type of batch to use
+  select: FIXED(1)/10          # uniform chance any single generated CQL row will be visited in a partition;
+                                  # generated for each partition independently, each time we visit it
+
+#
+# A list of queries you wish to run against the schema
+#
+queries:
+   simple1:
+      cql: select * from typestest where name = ? and choice = ? LIMIT 100
+      fields: samerow             # samerow or multirow (select arguments from the same row, or randomly from all rows in the partition)
+   range1:
+      cql: select * from typestest where name = ? and choice = ? and date >= ? LIMIT 100
+      fields: multirow            # samerow or multirow (select arguments from the same row, or randomly from all rows in the partition)
+
+
+#
+# A list of bulk read queries that analytics tools may perform against the schema
+# Each query will sweep an entire token range, page by page.
+#
+token_range_queries:
+  all_columns_tr_query:
+    columns: '*'
+    page_size: 5000
+
+  value_tr_query:
+    columns: value

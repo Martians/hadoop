@@ -1,0 +1,11 @@
+
+
+readproportion=0
+updateproportion=0
+scanproportion=1
+insertproportion=0
+
+requestdistribution=zipfian
+
+maxscanlength=100
+scanlengthdistribution=uniform

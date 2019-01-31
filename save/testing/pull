@@ -1,0 +1,13 @@
+#!/bin/sh
+
+if [ -e ../code/pull ] && ! [[ `pwd` =~ .*code$ ]] && [[ $1 != 1 ]]; then
+	sh ../code/pull 1
+else
+	# result=`git fetch origin 2>&1`
+	# [[ $result ]] && git merge origin/master
+
+	git fetch origin
+	if !(git diff master origin/master --quiet); then
+		git merge origin/master
+	fi
+fi

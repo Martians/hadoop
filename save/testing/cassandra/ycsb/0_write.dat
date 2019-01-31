@@ -1,0 +1,6 @@
+
+# https://github.com/brianfrankcooper/YCSB/wiki/Core-Workloads
+
+readproportion=0
+updateproportion=0
+insertproportion=0

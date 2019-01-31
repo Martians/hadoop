@@ -1,0 +1,57 @@
+
+# https://github.com/brianfrankcooper/YCSB/wiki/Core-Properties
+
+#hosts=100.1.1.10
+hosts=127.0.0.1
+threadcount=10
+
+#############################################################################
+## table
+# table=usertable
+# fieldcount=10
+# fieldlength=100
+
+#############################################################################
+## load -> write
+recordcount=10000000
+
+## run -> read、update、insert、scan
+operationcount=1000000
+# maxexecutiontime
+
+	## proportion
+	readproportion=0.95
+	updateproportion=0.05
+	scanproportion=0
+	insertproportion=0
+	readmodifywriteproportion=0
+
+	## read
+	# readallfields=true
+	# 	uniform、zipfian、latest
+	requestdistribution=zipfian
+
+	## scan
+	#maxscanlength=1000
+	#	between [1, maxscanlength]
+	#scanlengthdistribution=uniform
+
+	## insert
+	#	hashed、ordered
+	#insertorder=hashed
+
+#############################################################################
+# retry
+# core_workload_insertion_retry_limit = 0
+# core_workload_insertion_retry_interval = 3
+
+#############################################################################
+# status
+# exportfile=output.log
+
+# Measurement 
+# hdrhistogram, histogram and timeseries
+
+#############################################################################
+# workload
+workload=com.yahoo.ycsb.workloads.CoreWorkload

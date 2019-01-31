@@ -1,0 +1,54 @@
+#!/bin/bash
+
+DEST=/opt/yugabyte  
+cd $DEST
+
+DISKS=$DISK1,$DISK2
+HOSTS=$HOST1:7100,$HOST2:7100,$HOST3:7100
+
+#################################################################################################################
+start() {
+	nohup ./bin/yb-master --flagfile master.conf &
+	nohup ./bin/yb-tserver --flagfile server.conf &
+}
+
+stop() {
+	kill  -9 `ps -ef | grep yb-master | awk '{print $2}'`
+	kill  -9 `ps -ef | grep yb-tserver | awk '{print $2}'`
+}
+
+clear() {
+	stop
+	rm $DISK1/* $DISK2/* -rf
+}
+
+status() {
+	grep "current role is:" \
+		$DISK1/yb-data/master/logs/yb-master.INFO | \
+		tail -1 | grep -e "FOLLOWER" -e "LEADER" --color
+
+	grep "New master addresses" \
+		$DISK1/yb-data/tserver/logs/yb-tserver.INFO | \
+		tail -1 | grep ": [0-9.:]*" --color
+}
+
+master_log() {
+	cd $DISK1/yb-data/master/logs/
+	tail -f $DISK1/yb-data/master/logs/yb-master.INFO
+}
+
+server_log() {
+	cd $DISK1/yb-data/tserver/logs/
+	tail -f $DISK1/yb-data/tserver/logs/yb-tserver.INFO
+}
+
+case "$1" in
+	start)	start;;
+	stop)	stop;;
+	clear) 	clear;;
+	status)	status;;
+	master) master_log;;
+	server) server_log;;
+	*) 	echo "Unknown option: $1";;
+esac
+
