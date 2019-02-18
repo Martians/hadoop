@@ -12,7 +12,7 @@ global:
       # write、read; generate、load; scan
       #   write; read; scan; generate
       #   write read; generate load
-    #   write scan load
+      #   write scan load
     total: 1000
     batch: 100
     thread: 1
